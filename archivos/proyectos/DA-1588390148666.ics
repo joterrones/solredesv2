@@ -1,0 +1,47 @@
+BEGIN:VCALENDAR
+PRODID:-//zoom.us//iCalendar Event//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+CLASS:PUBLIC
+BEGIN:VTIMEZONE
+TZID:America/Lima
+TZURL:http://tzurl.org/zoneinfo-outlook/America/Lima
+X-LIC-LOCATION:America/Lima
+BEGIN:STANDARD
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0500
+TZNAME:PET
+DTSTART:19700101T000000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20200430T003241Z
+DTSTART;TZID=America/Lima:20200429T193000
+DTEND;TZID=America/Lima:20200429T231500
+SUMMARY:English III Class (Wednesdays)
+RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200611T041500;INTERVAL=1;BYDAY=WE
+UID:ZOOM91061676296
+TZID:America/Lima
+DESCRIPTION:Ruth Bonifacio le está invitando a una reunión de Zoom progra
+ mada.\n\nUnirse a la reunión Zoom\nhttps://zoom.us/j/91061676296?pwd=VG9
+ RTjlSaEc4SThDNUNWWG9kZ09qZz09\n\nID de reunión: 910 6167 6296\nContraseñ
+ a: 806958\nMóvil con un toque\n+16465588656\,\,91061676296# Estados Unid
+ os de América (Nueva York)\n+16699009128\,\,91061676296# Estados Unidos 
+ de América (San José)\n\nMarcar según su ubicación\n        +1 646 558 8
+ 656 Estados Unidos de América (Nueva York)\n        +1 669 900 9128 Esta
+ dos Unidos de América (San José)\n        +1 253 215 8782 Estados Unidos
+  de América (Tacoma)\n        +1 301 715 8592 Estados Unidos de América 
+ (Germantown)\n        +1 312 626 6799 Estados Unidos de América (Chicago
+ )\n        +1 346 248 7799 Estados Unidos de América (Houston)\nID de re
+ unión: 910 6167 6296\nEncuentre su número local: https://zoom.us/u/acwWp
+ pA1zr\n
+LOCATION:https://zoom.us/j/91061676296?pwd=VG9RTjlSaEc4SThDNUNWWG9kZ09qZz
+ 09
+BEGIN:VALARM
+TRIGGER:-PT10M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR

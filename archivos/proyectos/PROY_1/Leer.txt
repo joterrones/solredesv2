@@ -1,0 +1,116 @@
+//Router 
+port:560  -- Entrada y salida
+192.168.1.230
+Usuario:admin
+Pass:oficinac&w
+
+DLINKCANDWI
+192.168.1.2
+WIFI
+@Candwi012019@
+
+ROUTER DLINK
+pass:oficinac&w1
+
+//Servicios Google
+usuario: Software@candwi.com
+Passw: CyWdesarrollo204
+
+
+//Postgres
+35.192.101.151
+software
+It9ngy(T~y628I9
+
+
+Servidor Google
+software
+$Candwi$123
+
+///Geo server
+104.198.200.252 
+software
+^5_B!4Xn$Bz4q|t
+
+
+Mapa Sergio
+ip:35.202.215.161 
+usuario:software
+claver:3Z^F=pRLW~}=8.w
+
+////////
+Server Medicion Candwi
+35.193.54.64
+software
+YA83y,5V~|DLC#)
+
+
+////////
+Server Medicion Candwi 2
+35.193.54.64
+software
+Mp1]Y(Ka@84:Zo&
+
+
+////////////////
+
+TRE
+
+Producción
+prod.treperu.com/ergon
+treproduccion
+@TreInstalacion123456
+
+
+
+COMERCIAL
+104.154.250.166 
+software
+?f*We)&@[l-slyF
+
+104.154.250.166 
+
+
+//Adinelsa
+admin
+@disa882
+
+COMERCIAL2
+software
+kg~v(VgfH{i$g~S
+
+
+Incrementar Heap Size 
+
+Comando Centos
+
+Visualiza los valores predeterminados
+ java -XX:+PrintFlagsFinal -version | grep HeapSize
+
+
+Desactiva el cors origin del chrome 
+chrome.exe --user-data-dir="C://Chrome dev session" --disable-web-security
+
+zjS7p56KeMdzfZqmcNdQ
+
+Redirecciona puertos
+
+iptables -t nat -A PREROUTING -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 8443
+iptables -t nat -A PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8443
+iptables -t nat -L --line-numbers -n
+
+
+Generar apk ionic
+ionic cordova platform add android
+ionic cordova run android
+
+
+mtello
+204Candwi++
+
+software
+204Candwi++
+
+infosil
+jhonatan.terrones
+jo45447966
