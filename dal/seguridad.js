@@ -28,7 +28,7 @@ const login = (request, response) => {
 }
 
 const get = (request, response) => {
-    var obj = valida.validaToken(request)
+    var obj = valida.validaToken(request)    
     if (obj.estado) {
         let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_appaterno, u.c_dni, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u \n\r' +
             'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol \n\r' +            

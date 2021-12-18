@@ -16,6 +16,7 @@ const dbUbigeo = require('./dal/ubigeo')
 const dbBolsaProyecto = require('./dal/bolsaproyecto')
 const dbPrograma = require('./dal/programa')
 const bdConfiguracionGeneral = require('./dal/configuracionGeneral')
+const bdAlmacen = require('./dal/almacen')
 
 const app = express()
 const port = 3400
@@ -85,6 +86,21 @@ app.post('/api/configuracionGeneral/deleteEstructura',bdConfiguracionGeneral.del
 app.post('/api/configuracionGeneral/getTipoEmpresa',bdConfiguracionGeneral.getTipoEmpresa) 
 app.post('/api/configuracionGeneral/saveTipoEmpresa',bdConfiguracionGeneral.saveTipoEmpresa) 
 app.post('/api/configuracionGeneral/deleteTipoEmpresa',bdConfiguracionGeneral.deleteTipoEmpresa)
+
+/*Almacen */
+app.post('/api/almacen/getAlmacen',bdAlmacen.getAlmacen) 
+app.post('/api/almacen/getAlmacenes',bdAlmacen.getAlmacenes)
+app.post('/api/almacen/getProyecto',bdAlmacen.getProyecto) 
+app.post('/api/almacen/saveAlmacen',bdAlmacen.saveAlmacen) 
+app.post('/api/almacen/deleteAlmacen',bdAlmacen.deleteAlmacen) 
+app.post('/api/almacen/getPeriodos',bdAlmacen.getPeriodos) 
+app.post('/api/almacen/getGuia',bdAlmacen.getGuia) 
+app.post('/api/almacen/saveGuia',bdAlmacen.saveGuia) 
+app.post('/api/almacen/deleteGuia',bdAlmacen.deleteGuia) 
+app.post('/api/almacen/getGuias',bdAlmacen.getGuias) 
+app.post('/api/almacen/getElementos',bdAlmacen.getElementos) 
+app.post('/api/almacen/getDetalleGuia',bdAlmacen.getDetalleGuia) 
+app.post('/api/almacen/saveDetalleGuia',bdAlmacen.saveDetalleGuia)
 
 /* General */
 app.post('/api/general/get', dbGeneral.get)

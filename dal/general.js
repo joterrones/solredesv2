@@ -4,7 +4,7 @@ let pool = cnx.pool;
 
 
 const get = (request, response) => {
-    var obj = valida.validaToken(request)
+    var obj = valida.validaToken(request)    
     if (obj.estado) {
         pool.query('select n_idgen_entidad,c_name from gen_entidad where n_borrado = 0',
             (error, results) => {
