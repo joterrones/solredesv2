@@ -21,7 +21,7 @@ const bdAlmacen = require('./dal/almacen')
 const app = express()
 const port = 3400
 
-const ruta = '/archivos/proyectos';
+const ruta = '/archivos';
 
 app.use(bodyParser.json({ limit: '1000mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '1000mb' }));
@@ -49,7 +49,7 @@ app.get('/', (request, response) => {
   response.json({ info: 'Node.js, Express, and Postgres API' })
 })
 
-app.use('/static', express.static(__dirname + ruta));
+app.use('/archivos', express.static(__dirname + ruta));
 
 /* Seguridad */
 app.post('/api/seguridad/login', dbSeguridad.login)
