@@ -249,7 +249,7 @@ const getElementos = (request, response)=>{
 const getDetalleGuia = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {        
-        let cadena = 'select de.n_idalm_detalleguia, de.n_idalm_guia, de.n_idpl_elemento, el.c_nombre as c_nombreel, n_cantidad from alm_detalleguia de \n\r' +
+        let cadena = 'select de.n_idalm_detalleguia, de.n_idalm_guia, de.n_idpl_elemento, el.c_nombre as c_nombreel, n_cantidad, de.c_ruta from alm_detalleguia de \n\r' +
             'inner join pl_elemento el on el.n_idpl_elemento = de.n_idpl_elemento \n\r' +   
             'inner join alm_guia guia on guia.n_idalm_guia = de.n_idalm_guia \n\r' +          
             'where de.n_borrado = 0 and (guia.n_idalm_guia = $1 or 0 = $1) and (el.n_idpl_elemento = $2 or 0 = $2)'
