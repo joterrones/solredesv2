@@ -104,7 +104,8 @@ app.post('/api/almacen/saveDetalleGuia',bdAlmacen.saveDetalleGuia)
 app.post('/api/almacen/deleteDetalleGuia',bdAlmacen.deleteDetalleGuia)
 app.post('/api/almacen/uploadimagen', function (req, res) {
   let detalleguia = req.query.detalleguia;
-  let dir = __dirname.replace('\dal', '') + ruta+"/imgDetalleguia/" + detalleguia + "/";
+  let rutaCorta =  "/imgDetalleguia/" + detalleguia + "/";
+  let dir = __dirname.replace('\dal', '') + ruta+rutaCorta;
   let c_nombre = req.query.extension;
 
   if (!fs.existsSync(dir)) {
@@ -115,6 +116,7 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
   req.query.c_ruta = dir;
   req.query.c_nombre = c_nombre;
   dir = dir + '' + c_nombre;
+  rutaCorta = rutaCorta + '' + c_nombre;
 
   console.log("Ruta",dir);
   console.log("nombre",c_nombre);
@@ -122,7 +124,7 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
     if (err) {
       res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
     } else {
-      res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: dir, c_nombreImg: c_nombre  })
+      res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: rutaCorta, c_nombreImg: c_nombre  })
     }
   });
 }) 
