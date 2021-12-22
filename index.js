@@ -100,7 +100,33 @@ app.post('/api/almacen/deleteGuia',bdAlmacen.deleteGuia)
 app.post('/api/almacen/getGuias',bdAlmacen.getGuias) 
 app.post('/api/almacen/getElementos',bdAlmacen.getElementos) 
 app.post('/api/almacen/getDetalleGuia',bdAlmacen.getDetalleGuia) 
-app.post('/api/almacen/saveDetalleGuia',bdAlmacen.saveDetalleGuia)
+app.post('/api/almacen/saveDetalleGuia',bdAlmacen.saveDetalleGuia) 
+app.post('/api/almacen/deleteDetalleGuia',bdAlmacen.deleteDetalleGuia)
+app.post('/api/almacen/uploadimagen', function (req, res) {
+  let detalleguia = req.query.detalleguia;
+  let dir = __dirname.replace('\dal', '') + "/archivos/imgDetalleguia/" + detalleguia + "/";
+  let c_nombre = req.query.extension;
+
+  if (!fs.existsSync(dir)) {
+    
+    fs.mkdirSync(dir, 0744);
+  }
+
+  req.query.c_ruta = dir;
+  req.query.c_nombre = c_nombre;
+  dir = dir + '' + c_nombre;
+
+  console.log("Ruta",dir);
+  console.log("nombre",c_nombre);
+  upload(req, res, function (err) {
+    if (err) {
+      res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
+    } else {
+      res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: dir, c_nombreImg: c_nombre  })
+    }
+  });
+}) 
+app.post('/api/almacen/saveImgDetalleGuia',bdAlmacen.saveImgDetalleGuia)
 
 /* General */
 app.post('/api/general/get', dbGeneral.get)

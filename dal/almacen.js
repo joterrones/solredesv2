@@ -18,7 +18,7 @@ const getAlmacen = (request, response)=>{
                     console.log(error)
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
                 } else {     
-                    console.log(results.rows)               
+                                
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
                 }
             })
@@ -171,14 +171,13 @@ const getAlmacenes = (request, response)=>{
     if (obj.estado) {
         
         let cadena = 'select n_idalm_almacen, c_nombre from alm_almacen \n\r' +                       
-            'where n_borrado = 0'
-        pool.query(cadena,         
+            'where n_borrado = 0 and n_idalm_almacen = $1'
+        pool.query(cadena,[request.body.n_idalm_almacen],         
             (error, results) => {
                 if (error) {
                     console.log(error)
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
-                } else {     
-                    console.log(results.rows)               
+                } else {                
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
                 }
             })
@@ -250,7 +249,7 @@ const getElementos = (request, response)=>{
 const getDetalleGuia = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {        
-        let cadena = 'select de.n_idalm_detalleguia, de.n_idalm_guia, guia.c_nombre as c_nombreguia, de.n_idpl_elemento, el.c_nombre as c_nombreel, n_cantidad from alm_detalleguia de \n\r' +
+        let cadena = 'select de.n_idalm_detalleguia, de.n_idalm_guia, de.n_idpl_elemento, el.c_nombre as c_nombreel, n_cantidad from alm_detalleguia de \n\r' +
             'inner join pl_elemento el on el.n_idpl_elemento = de.n_idpl_elemento \n\r' +   
             'inner join alm_guia guia on guia.n_idalm_guia = de.n_idalm_guia \n\r' +          
             'where de.n_borrado = 0 and (guia.n_idalm_guia = $1 or 0 = $1) and (el.n_idpl_elemento = $2 or 0 = $2)'
@@ -272,17 +271,22 @@ const getDetalleGuia = (request, response)=>{
 const saveDetalleGuia = (request,response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
+        let c_nombre = request.body.c_nombreImg;
+        let c_ruta = request.body.c_ruta;
         let n_idalm_detalleguia = request.body.n_idalm_detalleguia; 
         let n_cantidad = request.body.n_cantidad;                                    
-
+        let n_idalm_guia = request.body.n_idalm_guia;
+        let n_idpl_elemento = request.body.n_idpl_elemento;
+        console.log("nombre",c_nombre)
+        console.log("ruta",c_ruta)
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idalm_detalleguia from alm_detalleguia where n_borrado = 0 and n_idalm_detalleguia =\'' + n_idalm_detalleguia + '\')) then \n\r' +
-            '           update alm_detalleguia set n_cantidad= \'' + n_cantidad + '\'\n\r' +
+            '           update alm_detalleguia set n_cantidad= \'' + n_cantidad + '\', n_idpl_elemento=\' '+ n_idpl_elemento +'\', c_ruta=\''+ c_ruta +'\', c_nombre=\''+ c_nombre +'\'  \n\r' +
             '                  where n_idalm_detalleguia =\'' + n_idalm_detalleguia + '\'; \n\r' +
             '       else \n\r' +
-            '           \n\r' +
-            '           \n\r' +
+            '           insert into alm_detalleguia(n_idalm_detalleguia, n_cantidad, n_idalm_guia,n_idpl_elemento, c_ruta, c_nombre, n_borrado, d_fechacrea, n_id_usercrea)\n\r' +
+            '           values (default,\'' + n_cantidad + '\',\'' + n_idalm_guia + '\','+ n_idpl_elemento +', \''+ c_ruta+'\',\''+ c_nombre +'\',0, now(), 1);\n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -292,6 +296,56 @@ const saveDetalleGuia = (request,response)=>{
                 if (error) {
                     console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveImgDetalleGuia  = (request,response)=>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+
+        let n_idalm_detalleguia = request.body.n_idalm_detalleguia; 
+        let n_cantidad = request.body.n_cantidad;                                    
+        let n_idalm_guia = request.body.n_idalm_guia;
+        let n_idpl_elemento = request.body.n_idpl_elemento;
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idalm_detalleguia from alm_detalleguia where n_borrado = 0 and n_idalm_detalleguia =\'' + n_idalm_detalleguia + '\')) then \n\r' +
+            '           update alm_detalleguia set n_cantidad= \'' + n_cantidad + '\', n_idpl_elemento=\' '+ n_idpl_elemento +' \'  \n\r' +
+            '                  where n_idalm_detalleguia =\'' + n_idalm_detalleguia + '\'; \n\r' +
+            '       else \n\r' +
+            '           insert into alm_detalleguia(n_idalm_detalleguia, n_cantidad, n_idalm_guia,n_idpl_elemento, n_borrado, d_fechacrea, n_id_usercrea)\n\r' +
+            '           values (default,\'' + n_cantidad + '\',\'' + n_idalm_guia + '\','+ n_idpl_elemento +',0, now(), 1);\n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteDetalleGuia = (request,response) =>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('update alm_detalleguia set n_borrado= $1 where n_idalm_detalleguia= $1',[request.body.n_idalm_detalleguia],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
                 }
@@ -316,4 +370,6 @@ module.exports = {
     getElementos,
     getDetalleGuia,
     saveDetalleGuia,
+    deleteDetalleGuia,
+    saveImgDetalleGuia,
 }
