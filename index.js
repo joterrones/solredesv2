@@ -17,6 +17,7 @@ const dbBolsaProyecto = require('./dal/bolsaproyecto')
 const dbPrograma = require('./dal/programa')
 const bdConfiguracionGeneral = require('./dal/configuracionGeneral')
 const bdAlmacen = require('./dal/almacen')
+const bdArchivos = require('./dal/AdmArchivos')
 
 const app = express()
 const port = 3400
@@ -112,7 +113,7 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
     
     fs.mkdirSync(dir, 0744);
   }
-
+  
   req.query.c_ruta = dir;
   req.query.c_nombre = c_nombre;
   dir = dir + '' + c_nombre;
@@ -129,6 +130,45 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
   });
 }) 
 app.post('/api/almacen/saveImgDetalleGuia',bdAlmacen.saveImgDetalleGuia)
+
+/* Gestion de archivos */
+app.post('/api/AdmArchivos/getArchivo',bdArchivos.getArchivo) 
+app.post('/api/AdmArchivos/getCarpetas',bdArchivos.getCarpetas) 
+app.post('/api/AdmArchivos/saveCarpeta',bdArchivos.saveCarpeta) 
+app.post('/api/AdmArchivos/deleteCarpeta',bdArchivos.deleteCarpeta)
+app.post('/api/AdmArchivos/uploadfile', function (req, res) {
+  let archivo = req.query.archivo;
+  let rutaCorta =  "/Carpeta/" + archivo + "/";
+  let dir = __dirname.replace('\dal', '') + ruta+rutaCorta;
+  let c_nombre = req.query.extension;
+
+  if (!fs.existsSync(dir)) {
+    
+    fs.mkdirSync(dir, 0744);
+  }
+  
+  req.query.c_ruta = dir;
+  req.query.c_nombre = c_nombre;
+  dir = dir + '' + c_nombre;
+  rutaCorta = rutaCorta + '' + c_nombre;
+
+  upload(req, res, function (err) {
+    if (err) {
+      res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
+    } else {
+      res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: rutaCorta, c_nombre: c_nombre  })
+    }
+  });
+}) 
+app.post('/api/AdmArchivos/saveArchivo',bdArchivos.saveArchivo) 
+app.post('/api/AdmArchivos/deleteArchivo',bdArchivos.deleteArchivo)
+
+app.get("/api/AdmArchivos/downloadArchivo", (req, res) => {
+  let rutaarchivo = __dirname + ruta+ req.query.c_ruta;
+  console.log(rutaarchivo);
+  const file = path.resolve('', rutaarchivo);
+  res.download(file);
+})
 
 /* General */
 app.post('/api/general/get', dbGeneral.get)
