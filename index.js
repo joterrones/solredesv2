@@ -8,7 +8,7 @@ var path = require('path')
 const dbSeguridad = require('./dal/seguridad')
 const dbImportacion = require('./dal/importacion')
 const dbProyecto = require('./dal/proyecto')
-
+const dbMapa = require('./dal/mapa')
 const bdAlmacen = require('./dal/almacen')
 const bdArchivos = require('./dal/AdmArchivos')
 
@@ -190,10 +190,12 @@ app.post('/api/proyecto/uploadfile', function (req, res) {
 })
 
 app.post('/api/proyecto/get_seleccionproyecto', dbProyecto.get_seleccionproyecto);
-app.post('/api/inportacion/insertplanilla', dbImportacion.insertplanilla);
+app.post('/api/importacion/insertplanilla', dbImportacion.insertplanilla);
+app.post('/api/importacion/insertlinea', dbImportacion.insertlinea);
+app.post('/api/importacion/creargeom', dbImportacion.creargeom);
 
-
-//app.post('/api/tipoproyecto/save', dbTipoProyecto.save)
+app.post('/api/mapa/get', dbMapa.get);
+app.post('/api/mapa/getlineas', dbMapa.getlineas);
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
