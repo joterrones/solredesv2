@@ -7,12 +7,15 @@ let pool = cnx.pool;
 
 const getArchivo = (request, response)=>{
     var obj = valida.validaToken(request)
+    let n_iddoc_archivopadre = request.body.n_iddoc_archivopadre;
+    console.log(n_iddoc_archivopadre)
     if (obj.estado) {
         
-        let cadena = 'select ar.id_archivo, ar.id_carpeta, ar.c_nombre, ar.c_ruta, ar.d_fechamodi from archivo ar \n\r' +
-            'inner join carpeta ca on ca.id_carpeta = ar.id_carpeta \n\r' +            
-            'where ar.n_borrado = 0 and (ar.id_carpeta = $1 or 0 = $1)'
-        pool.query(cadena,[request.body.id_carpeta],            
+        /*let cadena = 'select n_iddoc_archivo, n_idpro_proyecto, c_nombre, c_ruta, c_rutalogica, c_checksum, c_tipo, n_iddoc_archivopadre from doc_archivo \n\r' +           
+            'where n_borrado = 0 and ( 0 = '+  n_iddoc_archivopadre +' or n_iddoc_archivopadre =' +n_iddoc_archivopadre+')';*/
+            let cadena = 'select n_iddoc_archivo, n_idpro_proyecto, c_nombre, c_ruta, c_rutalogica, c_checksum, c_tipo, n_iddoc_archivopadre from doc_archivo \n\r' +           
+            'where n_borrado = 0 and  coalesce(n_iddoc_archivopadre,0) =' + n_iddoc_archivopadre ;
+        pool.query(cadena,          
             (error, results) => {
                 if (error) {
                     console.log(error)
@@ -24,112 +27,32 @@ const getArchivo = (request, response)=>{
             })
     } else {
         response.status(200).json(obj)
-    }
-
-    /*const fs = require('fs');
-
-        fs.readdir("./archivos/proyectos",(error, files)=>{
-            if(error){
-                throw error
-            }
-            console.log(files);
-            console.log("finalizando Lectura");
-            
-        })
-        console.log("iniciando lectura")        */
-
-    
-}
-
-const getCarpetas = (request, response)=>{
-    var obj = valida.validaToken(request)
-    if (obj.estado) {
-        
-        let cadena = 'select id_carpeta, c_nombre, d_fechamodi from carpeta where n_borrado= 0' 
-        pool.query(cadena,           
-            (error, results) => {
-                if (error) {
-                    console.log(error)
-                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
-                } else {     
-                                
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
-    } else {
-        response.status(200).json(obj)
-    }
-}
-
-const saveCarpeta = (request,response)=>{
-    var obj = valida.validaToken(request)
-    if (obj.estado) {
-        let id_carpeta = request.body.id_carpeta;   
-        let c_nombre = request.body.c_nombre;   
-       
-        let cadena = 'do $$ \n\r' +
-            '   begin \n\r' +
-            '       if(exists(select id_carpeta from carpeta where n_borrado = 0 and id_carpeta =\'' + id_carpeta + '\')) then \n\r' +
-            '           update carpeta set c_nombre= \'' + c_nombre + '\', d_fechamodi= now() where id_carpeta =\'' + id_carpeta + '\'; \n\r' +
-            '       else \n\r' +
-            '           insert into carpeta(id_carpeta, c_nombre, n_borrado, d_fechacrea, d_fechamodi, n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_nombre + '\', 0, now(), now(), 1); \n\r' +
-            '       end if; \n\r' +
-            '   end \n\r' +
-            '$$';
-
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
-    } else {
-        response.status(200).json(obj)
-    }
-}
-
-const deleteCarpeta = (request,response) =>{
-    var obj = valida.validaToken(request)
-    if (obj.estado) {
-        pool.query('update carpeta set n_borrado= $1 where id_carpeta= $1',[request.body.id_carpeta],
-            (error, results) => {
-                if (error) {
-                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
-    } else {
-        response.status(200).json(obj)
-    }
+    }    
 }
 
 const saveArchivo = (request,response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        let id_archivo = request.body.id_archivo;   
-        let id_carpeta = request.body.id_carpeta;   
-        let c_nombre = request.body.c_nombre;
+        let n_iddoc_archivo = request.body.n_iddoc_archivo;  
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
+        let c_nombre = request.body.c_nombre; 
         let c_ruta = request.body.c_ruta;
-        console.log("ID: ",id_carpeta);
-        console.log("IDarchivo: ",id_archivo);
-        console.log("NOMBRE: ",c_nombre);
-        console.log("RUTA: ",c_ruta);
+        let c_rutalogica = request.body.c_rutalogica;   
+        let c_checksum = request.body.c_checksum;
+        let c_tipo = request.body.c_tipo;
+        let n_iddoc_archivopadre = request.body.n_iddoc_archivopadre;
+        console.log("Padre",n_iddoc_archivopadre);
 
         let cadena ='do $$ \n\r' +
         '   begin \n\r' +
-        '       if(exists(select id_archivo from archivo where n_borrado = 0 and id_archivo =\'' + id_archivo + '\')) then \n\r' +
-        '           update archivo set id_carpeta= \''+ id_carpeta +'\', c_nombre= \'' + c_nombre + '\', d_fechamodi= now() where id_archivo =\'' + id_archivo + '\'; \n\r' +
+        '       if(exists(select n_iddoc_archivo from doc_archivo where n_borrado = 0 and n_iddoc_archivo =\'' + n_iddoc_archivo + '\')) then \n\r' +
+        '           update doc_archivo set c_nombre= \''+ c_nombre +'\', c_rutalogica= \'' + c_rutalogica + '\', n_iddoc_archivopadre=\''+ n_iddoc_archivopadre +'\', d_fechamodi= now() where n_iddoc_archivo =\'' + n_iddoc_archivo + '\'; \n\r' +
         '       else \n\r' +
-        '           insert into archivo(id_archivo, id_carpeta, c_nombre, c_ruta, n_borrado, d_fechacrea, d_fechamodi, n_id_usercrea) \n\r' +
-        '           values (default,'+ id_carpeta +',\'' + c_nombre + '\',\''+ c_ruta +'\',0, now(), now(), 1); \n\r' +
+        '           insert into doc_archivo(n_iddoc_archivo, n_idpro_proyecto, c_nombre, c_ruta, c_rutalogica, c_checksum, c_tipo, n_iddoc_archivopadre, n_borrado, d_fechacrea, d_fechamodi, n_id_usercrea) \n\r' +
+        '           values (default,'+ n_idpro_proyecto +',\'' + c_nombre + '\',\''+ c_ruta +'\', \''+ c_rutalogica +'\',\''+ c_checksum +'\', \''+ c_tipo +'\','+ n_iddoc_archivopadre+', 0, now(), now(), 1); \n\r' +
         '       end if; \n\r' +
         '   end \n\r' +
-        '$$';
+        '$$';        
         pool.query(cadena,
             (error, results) => {
                 if (error) {
@@ -147,7 +70,7 @@ const saveArchivo = (request,response)=>{
 const deleteArchivo = (request,response) =>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('delete from archivo where id_archivo= $1',[request.body.id_archivo],
+        pool.query('update doc_archivo set n_borrado = $1 where n_iddoc_archivo = $1', [request.body.n_iddoc_archivo],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
@@ -160,11 +83,30 @@ const deleteArchivo = (request,response) =>{
     }
 }
 
+const getCarpetas = (request, response)=>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {        
+        let cadena = 'select n_iddoc_archivo, c_nombre, n_iddoc_archivopadre from doc_archivo \n\r' +            
+            'where c_tipo = \''+ "3" +'\' or ( n_borrado = 0 and c_tipo = \''+ "1" +'\' )'
+        pool.query(cadena,         
+            (error, results) => {
+                if (error) {
+                    console.log(error)
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
+                } else {     
+                                
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+
 module.exports = {
     getArchivo,
-    getCarpetas,
-    saveCarpeta,
-    deleteCarpeta,
     saveArchivo,
-    deleteArchivo
+    deleteArchivo,
+    getCarpetas
 }

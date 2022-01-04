@@ -75,11 +75,13 @@ const deleteEmpresa = (request, response) =>{
 const getLinea = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, tp.c_nombre as c_nombret from pl_linea as l \n\r' +
-            'left join pl_tipolinea tp on tp.n_idpl_tipolinea = l.n_idpl_tipolinea \n\r' +            
-            'where l.n_borrado = 0 and (l.n_idpl_linea = $1 or 0 = $1)'
+        console.log(request.body.n_idpl_zona);
+        let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, tp.c_nombre as c_nombret, zn.c_nombre as c_nombrez from pl_linea as l \n\r' +
+            'left join pl_tipolinea tp on tp.n_idpl_tipolinea = l.n_idpl_tipolinea \n\r' +    
+            'left join pl_zona zn on zn.n_idpl_zona = l.n_idpl_zona \n\r' +         
+            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2)'
         pool.query(cadena,
-            [request.body.n_idpl_tipolinea],/*, request.body.n_idgen_entidad*/
+            [request.body.n_idpl_tipolinea, request.body.n_idpl_zona],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
@@ -98,15 +100,16 @@ const saveLinea = (request,response)=>{
         let n_idpl_linea = request.body.n_idpl_linea;   
         let c_nombre = request.body.c_nombre;
         let c_codigo = request.body.c_codigo;     
-        let n_idpl_tipolinea = request.body.n_idpl_tipolinea;       
-       
+        let n_idpl_tipolinea = request.body.n_idpl_tipolinea;   
+        let n_idpl_zona = request.body.n_idpl_zona;    
+        console.log(n_idpl_zona);
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idpl_linea from pl_linea where n_borrado = 0 and n_idpl_linea =\'' + n_idpl_linea + '\')) then \n\r' +
-            '           update pl_linea set c_nombre= \'' + c_nombre + '\', c_codigo=\'' + c_codigo + '\', n_idpl_tipolinea=' + n_idpl_tipolinea +' where n_idpl_linea =\'' + n_idpl_linea + '\'; \n\r' +
+            '           update pl_linea set c_nombre= \'' + c_nombre + '\', c_codigo=\'' + c_codigo + '\', n_idpl_tipolinea=' + n_idpl_tipolinea +', n_idpl_zona=\''+ n_idpl_zona +'\' where n_idpl_linea =\'' + n_idpl_linea + '\'; \n\r' +
             '       else \n\r' +
-            '           insert into pl_linea(n_idpl_linea,c_nombre,c_codigo,n_idpl_tipolinea,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\',' + n_idpl_tipolinea + ', 0, now(), 1); \n\r' +
+            '           insert into pl_linea(n_idpl_linea,c_nombre,c_codigo,n_idpl_tipolinea,n_idpl_zona,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\',' + n_idpl_tipolinea + ', \''+ n_idpl_zona +'\',0, now(), 1); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -210,6 +213,25 @@ const getZona = (request, response) => {
         'left join pl_proyecto pr on pr.n_idpl_proyecto = z.n_idpl_proyecto \n\r' +            
         'where z.n_borrado = 0 and (z.n_idpl_zona = $1 or 0 = $1)'
         ,[request.body.n_idpl_zona],
+            (error, results) => {
+                
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error222!.", data: null })
+                } else {                    
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getZonas = (request, response) => {    
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('Select n_idpl_zona, c_codigo, c_nombre, n_idpl_proyecto from pl_zona \n\r' +       
+        'where n_borrado = 0 and (n_idpl_zona = $1 or 0 = $1)'
+        ,[request.body.n_idpl_tipolinea],
             (error, results) => {
                 
                 if (error) {
@@ -534,6 +556,226 @@ const deleteTipoEmpresa = (request,response) =>{
     }
 }
 
+const getValoresGnr = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('select n_idgen_valoresgenerales, c_codigo, c_nombre from gen_valoresgenerales where n_borrado = 0',
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveValoresGnr = (request, response) =>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idgen_valoresgenerales = request.body.n_idgen_valoresgenerales;
+        let c_codigo = request.body.c_codigo;   
+        let c_nombre = request.body.c_nombre;      
+ 
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idgen_valoresgenerales from gen_valoresgenerales where n_idgen_valoresgenerales =\'' + n_idgen_valoresgenerales + '\')) then \n\r' +
+            '           update gen_valoresgenerales set c_codigo=\''+ c_codigo +'\', c_nombre= \'' + c_nombre + '\' where n_idgen_valoresgenerales = \''+n_idgen_valoresgenerales+'\' ; \n\r' +
+            '       else \n\r' +
+            '           insert into gen_valoresgenerales(n_idgen_valoresgenerales, c_codigo, c_nombre, n_valorunico, n_tipo, n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\', 0, 1, 0, now(), 1); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteValorGnr = (request, response) =>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('update gen_valoresgenerales set n_borrado= $1 where n_idgen_valoresgenerales= $1',[request.body.n_idgen_valoresgenerales],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getProyectos = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('Select n_idpro_proyecto, c_nombre from pro_proyecto where n_borrado = 0',
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getTraGrupos = (request, response)=>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        
+        let cadena = 'select gr.n_idtra_grupo, gr.n_idpro_proyecto, gr.c_nombre, pro.c_nombre as c_nombrep from tra_grupo gr \n\r' +
+            'inner join pro_proyecto pro on pro.n_idpro_proyecto = gr.n_idpro_proyecto  \n\r' +        
+            'where gr.n_borrado = 0 and (gr.n_idpro_proyecto = $1 or 0 = $1)'
+        pool.query(cadena,
+            [request.body.n_idpro_proyecto],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const savetraGrupos = (request,response)=>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idtra_grupo = request.body.n_idtra_grupo
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;   
+        let c_nombre = request.body.c_nombre;  
+        
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idtra_grupo from tra_grupo where n_borrado = 0 and n_idtra_grupo =\'' + n_idtra_grupo + '\')) then \n\r' +
+            '           update tra_grupo set c_nombre= \'' + c_nombre + '\', n_idpro_proyecto=' + n_idpro_proyecto +' where n_idtra_grupo =\'' + n_idtra_grupo + '\'; \n\r' +
+            '       else \n\r' +
+            '           insert into tra_grupo(n_idtra_grupo, c_nombre, n_idpro_proyecto, n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',' + n_idpro_proyecto + ',0, now(), 1); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deletetraGrupos = (request,response) =>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('update tra_grupo set n_borrado= $1 where n_idtra_grupo= $1',[request.body.n_idtra_grupo],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getProUser = (request, response)=>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        
+        let cadena = 'select us.n_idseg_userprofile as n_idseg_userprofileusu, us.c_username, gru.n_idtra_grupo, gru.n_idseg_userprofile, gru.b_activo from seg_userprofile us \n\r' +
+            'left join tra_grupousuario gru on gru.n_idseg_userprofile = us.n_idseg_userprofile and  gru.n_idtra_grupo = $1 or (gru.n_idseg_userprofile = null)   \n\r' +        
+            'where us.n_borrado = 0'
+        pool.query(cadena,
+            [request.body.n_idtra_grupo],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const resetProUser = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let cadena = 'update tra_grupousuario set b_activo = false \n\r' +     
+            'where n_idtra_grupo = $1'  
+        pool.query(cadena,[request.body.n_idtra_grupo],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveProUser = (request, response)=>{
+    
+    var obj = valida.validaToken(request)
+    console.log(request.body.n_idseg_userprofile);
+    console.log(request.body.n_idtra_grupo);
+    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+    let n_idtra_grupo = request.body.n_idtra_grupo;
+    if (obj.estado) {        
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = '+ n_idtra_grupo +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
+            '           update tra_grupousuario set b_activo = true	where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idtra_grupo = '+ n_idtra_grupo +'; \n\r' +
+            '       else \n\r' +
+            '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
+            '           VALUES (default, '+ n_idtra_grupo +', '+ n_idseg_userprofile +', true, 0, 1, 1, now(), now()); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+    
+}
+
 module.exports = {
     getempresa,
     saveEmpresa,    
@@ -545,6 +787,7 @@ module.exports = {
     saveTipoLinea,
     deleteTipoLinea,
     getZona,
+    getZonas,
     saveZona,
     deleteZona,
     getProyecto,
@@ -558,5 +801,15 @@ module.exports = {
     deleteEstructura,
     getTipoEmpresa,
     saveTipoEmpresa,
-    deleteTipoEmpresa
+    deleteTipoEmpresa,
+    getValoresGnr,
+    saveValoresGnr,
+    deleteValorGnr,
+    getProyectos,
+    getTraGrupos,
+    savetraGrupos,
+    deletetraGrupos,
+    getProUser,
+    resetProUser,
+    saveProUser
 }

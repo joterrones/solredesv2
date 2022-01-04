@@ -223,6 +223,95 @@ const resetearclave = (request, response) => {
     }
 }
 
+const getProyectos = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let cadena = 'select c_nombre, n_idpro_proyecto, n_borrado from pro_proyecto \n\r' +     
+            'where n_borrado = 0'  
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getUserPro = (request, response) => {
+    var obj = valida.validaToken(request);
+    console.log(request.body.n_idseg_userprofile);
+    if (obj.estado) {
+        let cadena = 'select pro.n_idpro_proyecto as n_idpro_proyectopro, pro.c_nombre, prou.n_idseg_userprofile, prou.n_idpro_proyecto, prou.n_borrado from pro_proyecto pro \n\r' +
+            'left join pro_usuarioproyecto prou on prou.n_idpro_proyecto = pro.n_idpro_proyecto and (prou.n_idpro_proyecto is null or prou.n_idseg_userprofile = $1) \n\r' + 
+            'where pro.n_borrado = 0'  
+        pool.query(cadena,[request.body.n_idseg_userprofile],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const resetUserPro = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let cadena = 'update pro_usuarioproyecto set n_borrado = 1 \n\r' +     
+            'where n_idseg_userprofile = $1'  
+        pool.query(cadena,[request.body.n_idseg_userprofile],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveUserPro = (request, response)=>{
+    
+    var obj = valida.validaToken(request)
+    let n_idpro_proyecto = request.body.n_idpro_proyecto;
+    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+    if (obj.estado) {
+        
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idseg_userprofile, n_idpro_proyecto from pro_usuarioproyecto where n_idpro_proyecto = '+ n_idpro_proyecto +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
+            '           update pro_usuarioproyecto set n_borrado = 0 where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
+            '       else \n\r' +
+            '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
+            '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, 1, 1, now(), now()); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+    
+}
+
+
 
 
 module.exports = {
@@ -233,5 +322,9 @@ module.exports = {
     resetearclave,
     delete_usuario,
     saveRol,
-    deleteRol
+    deleteRol,
+    getProyectos,
+    getUserPro,
+    saveUserPro,
+    resetUserPro
 }
