@@ -9,7 +9,7 @@ const getAlmacen = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         
-        let cadena = 'select al.n_idalm_almacen, al.n_idpro_proyecto, al.c_nombre, al.c_direccion ,pr.c_nombre as c_nombrep from alm_almacen al \n\r' +
+        let cadena = 'select al.n_idalm_almacen, al.n_idpro_proyecto, al.c_nombre, al.c_direccion from alm_almacen al \n\r' +
             'left join pro_proyecto pr on pr.n_idpro_proyecto = al.n_idpro_proyecto \n\r' +            
             'where al.n_borrado = 0 and (al.n_idpro_proyecto = $1 or 0 = $1)'
         pool.query(cadena,[request.body.n_idpro_proyecto],            
@@ -67,22 +67,6 @@ const deleteAlmacen = (request,response) =>{
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
-    } else {
-        response.status(200).json(obj)
-    }
-}
-
-const getProyecto = (request, response) => {
-    var obj = valida.validaToken(request)
-    if (obj.estado) {
-        pool.query('Select n_idpro_proyecto, c_nombre from pro_proyecto where n_borrado = 0 and (n_idpro_proyecto= $1 or 0 = $1) ',[request.body.n_idpro_proyecto],
-            (error, results) => {
-                if (error) {
-                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
                 }
@@ -252,8 +236,8 @@ const getDetalleGuia = (request, response)=>{
         let cadena = 'select de.n_idalm_detalleguia, de.n_idalm_guia, de.n_idpl_elemento, el.c_nombre as c_nombreel, n_cantidad, de.c_ruta from alm_detalleguia de \n\r' +
             'inner join pl_elemento el on el.n_idpl_elemento = de.n_idpl_elemento \n\r' +   
             'inner join alm_guia guia on guia.n_idalm_guia = de.n_idalm_guia \n\r' +          
-            'where de.n_borrado = 0 and (guia.n_idalm_guia = $1 or 0 = $1) and (el.n_idpl_elemento = $2 or 0 = $2)'
-        pool.query(cadena,[request.body.n_idalm_guia,request.body.n_idpl_elemento],            
+            'where de.n_borrado = 0 and (guia.n_idalm_guia = $1 or 0 = $1)'
+        pool.query(cadena,[request.body.n_idalm_guia],            
             (error, results) => {
                 if (error) {
                     console.log(error)
@@ -361,7 +345,6 @@ module.exports = {
     getAlmacenes,
     saveAlmacen,    
     deleteAlmacen,
-    getProyecto,
     getGuia,
     saveGuia,    
     deleteGuia,
