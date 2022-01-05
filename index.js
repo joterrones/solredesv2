@@ -10,8 +10,8 @@ const dbImportacion = require('./dal/importacion')
 const dbProyecto = require('./dal/proyecto')
 const dbMapa = require('./dal/mapa')
 const bdAlmacen = require('./dal/almacen')
-const bdArchivos = require('./dal/AdmArchivos')
-const bdConfiguracionGeneral = require('./dal/configuracionGeneral')
+const bdArchivos = require('./dal/admarchivos')
+const bdConfiguracionGeneral = require('./dal/configuraciongeneral')
 
 const app = express()
 const port = 3400

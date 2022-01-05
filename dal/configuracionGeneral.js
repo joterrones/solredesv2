@@ -209,8 +209,8 @@ const getZona = (request, response) => {
     
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select z.n_idpl_zona, z.n_idpl_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z \n\r' +
-        'left join pl_proyecto pr on pr.n_idpl_proyecto = z.n_idpl_proyecto \n\r' +            
+        pool.query('Select z.n_idpl_zona, z.n_idpro_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z  \n\r' +
+        'left join pro_proyecto pr on pr.n_idpro_proyecto = z.n_idpro_proyecto   \n\r' +            
         'where z.n_borrado = 0 and (z.n_idpl_zona = $1 or 0 = $1)'
         ,[request.body.n_idpl_zona],
             (error, results) => {
@@ -229,7 +229,7 @@ const getZona = (request, response) => {
 const getZonas = (request, response) => {    
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select n_idpl_zona, c_codigo, c_nombre, n_idpl_proyecto from pl_zona \n\r' +       
+        pool.query('Select n_idpl_zona, c_codigo, c_nombre, n_idpro_proyecto from pl_zona \n\r' +       
         'where n_borrado = 0 and (n_idpl_zona = $1 or 0 = $1)'
         ,[request.body.n_idpl_tipolinea],
             (error, results) => {
@@ -249,17 +249,17 @@ const saveZona = (request, response) =>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         let n_idpl_zona = request.body.n_idpl_zona;
-        let n_idpl_proyecto = request.body.n_idpl_proyecto;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
         let c_codigo = request.body.c_codigo;     
         let c_nombre = request.body.c_nombre;        
               
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idpl_zona from pl_zona where n_idpl_zona =\'' + n_idpl_zona + '\')) then \n\r' +
-            '           update pl_zona set c_codigo= \'' + c_codigo + '\', c_nombre=\''+c_nombre+'\', n_idpl_proyecto=' + n_idpl_proyecto +' where n_idpl_zona = \''+n_idpl_zona+'\' ; \n\r' +
+            '           update pl_zona set c_codigo= \'' + c_codigo + '\', c_nombre=\''+c_nombre+'\', n_idpro_proyecto=' + n_idpro_proyecto +' where n_idpl_zona = \''+n_idpl_zona+'\' ; \n\r' +
             '       else \n\r' +
-            '           insert into pl_zona(n_idpl_zona, c_codigo, c_nombre, n_idpl_proyecto, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_codigo + '\', \''+c_nombre+'\','+ n_idpl_proyecto +', 0, now(), 1); \n\r' +
+            '           insert into pl_zona(n_idpl_zona, c_codigo, c_nombre, n_idpro_proyecto, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_codigo + '\', \''+c_nombre+'\','+ n_idpro_proyecto +', 0, now(), 1); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
