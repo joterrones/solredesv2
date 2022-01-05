@@ -14,7 +14,7 @@ const bdArchivos = require('./dal/admarchivos')
 const bdConfiguracionGeneral = require('./dal/configuraciongeneral')
 
 const app = express()
-const port = 3400
+const port = 3200
 
 const ruta = '/archivos';
 
