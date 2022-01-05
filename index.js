@@ -89,19 +89,20 @@ app.post('/api/configuracionGeneral/deleteTipoEmpresa',bdConfiguracionGeneral.de
 app.post('/api/configuracionGeneral/getValoresGnr',bdConfiguracionGeneral.getValoresGnr) 
 app.post('/api/configuracionGeneral/saveValoresGnr',bdConfiguracionGeneral.saveValoresGnr) 
 app.post('/api/configuracionGeneral/deleteValorGnr',bdConfiguracionGeneral.deleteValorGnr) 
-app.post('/api/configuracionGeneral/getProyectos',bdConfiguracionGeneral.getProyectos) 
 app.post('/api/configuracionGeneral/getTraGrupos',bdConfiguracionGeneral.getTraGrupos) 
 app.post('/api/configuracionGeneral/savetraGrupos',bdConfiguracionGeneral.savetraGrupos) 
 app.post('/api/configuracionGeneral/deletetraGrupos',bdConfiguracionGeneral.deletetraGrupos) 
 app.post('/api/configuracionGeneral/getProUser',bdConfiguracionGeneral.getProUser) 
 app.post('/api/configuracionGeneral/resetProUser',bdConfiguracionGeneral.resetProUser) 
 app.post('/api/configuracionGeneral/saveProUser',bdConfiguracionGeneral.saveProUser)
+app.post('/api/configuracionGeneral/getLineaUser',bdConfiguracionGeneral.getLineaUser)
+app.post('/api/configuracionGeneral/resetLineaUser',bdConfiguracionGeneral.resetLineaUser)
+app.post('/api/configuracionGeneral/saveLineaUser',bdConfiguracionGeneral.saveLineaUser)
 
 
 /*Almacen */
 app.post('/api/almacen/getAlmacen',bdAlmacen.getAlmacen) 
 app.post('/api/almacen/getAlmacenes',bdAlmacen.getAlmacenes)
-app.post('/api/almacen/getProyecto',bdAlmacen.getProyecto) 
 app.post('/api/almacen/saveAlmacen',bdAlmacen.saveAlmacen) 
 app.post('/api/almacen/deleteAlmacen',bdAlmacen.deleteAlmacen) 
 app.post('/api/almacen/getPeriodos',bdAlmacen.getPeriodos) 

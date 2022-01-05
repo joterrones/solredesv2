@@ -76,7 +76,7 @@ const getLinea = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         console.log(request.body.n_idpl_zona);
-        let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, tp.c_nombre as c_nombret, zn.c_nombre as c_nombrez from pl_linea as l \n\r' +
+        let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, l.n_idpl_tipolinea, l.n_idpl_zona,tp.c_nombre as c_nombret, zn.c_nombre as c_nombrez from pl_linea as l \n\r' +
             'left join pl_tipolinea tp on tp.n_idpl_tipolinea = l.n_idpl_tipolinea \n\r' +    
             'left join pl_zona zn on zn.n_idpl_zona = l.n_idpl_zona \n\r' +         
             'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2)'
@@ -209,13 +209,14 @@ const getZona = (request, response) => {
     
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select z.n_idpl_zona, z.n_idpro_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z  \n\r' +
-        'left join pro_proyecto pr on pr.n_idpro_proyecto = z.n_idpro_proyecto   \n\r' +            
+        pool.query('Select z.n_idpl_zona, z.n_idpro_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z \n\r' +
+        'left join pro_proyecto pr on pr.n_idpro_proyecto = z.n_idpro_proyecto \n\r' +            
         'where z.n_borrado = 0 and (z.n_idpl_zona = $1 or 0 = $1)'
         ,[request.body.n_idpl_zona],
             (error, results) => {
                 
                 if (error) {
+                    console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error222!.", data: null })
                 } else {                    
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
@@ -297,7 +298,7 @@ const deleteZona= (request, response) =>{
 const getProyecto = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select n_idpl_proyecto, c_nombre from pl_proyecto where n_borrado = 0 and (n_idpl_proyecto= $1 or 0 = $1) ',[request.body.n_idpl_proyecto],
+        pool.query('Select n_idpro_proyecto, c_nombre from pro_proyecto where n_borrado = 0 and (n_idpro_proyecto= $1 or 0 = $1) ',[request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -313,14 +314,14 @@ const getProyecto = (request, response) => {
 const saveProyecto = (request, response) =>{
     var obj = valida.validaToken(request)
     if (obj.estado) {        
-        let n_idpl_proyecto = request.body.n_idpl_proyecto;            
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;            
         let c_nombre = request.body.c_nombre;       
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
-            '       if(exists(select n_idpl_proyecto from pl_proyecto where n_idpl_proyecto =\'' + n_idpl_proyecto + '\')) then \n\r' +
-            '           update pl_proyecto set c_nombre= \'' + c_nombre + '\' where n_idpl_proyecto = \''+n_idpl_proyecto+'\' ; \n\r' +
+            '       if(exists(select n_idpro_proyecto from pro_proyecto where n_idpro_proyecto =\'' + n_idpro_proyecto + '\')) then \n\r' +
+            '           update pro_proyecto set c_nombre= \'' + c_nombre + '\' where n_idpro_proyecto = \''+n_idpro_proyecto+'\' ; \n\r' +
             '       else \n\r' +
-            '           insert into pl_proyecto(n_idpl_proyecto, c_nombre, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           insert into pro_proyecto(n_idpro_proyecto, c_nombre, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
             '           values (default,\'' + c_nombre + '\', 0, now(), 1); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
@@ -344,7 +345,7 @@ const deleteProyecto= (request, response) =>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         
-        pool.query('update pl_proyecto set n_borrado= $1 where n_idpl_proyecto= $1',[request.body.n_idpl_proyecto],
+        pool.query('update pro_proyecto set n_borrado= $1 where n_idpro_proyecto= $1',[request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
@@ -619,27 +620,11 @@ const deleteValorGnr = (request, response) =>{
     }
 }
 
-const getProyectos = (request, response) => {
-    var obj = valida.validaToken(request)
-    if (obj.estado) {
-        pool.query('Select n_idpro_proyecto, c_nombre from pro_proyecto where n_borrado = 0',
-            (error, results) => {
-                if (error) {
-                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
-    } else {
-        response.status(200).json(obj)
-    }
-}
-
 const getTraGrupos = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         
-        let cadena = 'select gr.n_idtra_grupo, gr.n_idpro_proyecto, gr.c_nombre, pro.c_nombre as c_nombrep from tra_grupo gr \n\r' +
+        let cadena = 'select gr.n_idtra_grupo, gr.n_idpro_proyecto, gr.c_nombre from tra_grupo gr \n\r' +
             'inner join pro_proyecto pro on pro.n_idpro_proyecto = gr.n_idpro_proyecto  \n\r' +        
             'where gr.n_borrado = 0 and (gr.n_idpro_proyecto = $1 or 0 = $1)'
         pool.query(cadena,
@@ -776,6 +761,78 @@ const saveProUser = (request, response)=>{
     
 }
 
+const getLineaUser = (request, response)=>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        
+        let cadena = 'select al.n_idpl_linea as n_idpl_linealn, al.c_nombre, gru.n_idtra_grupo, gru.n_idpl_linea, gru.n_borrado from pl_linea al \n\r' +
+            'left join tra_grupolinea gru on gru.n_idpl_linea = al.n_idpl_linea and  gru.n_idtra_grupo = $1 or (gru.n_idpl_linea = null) \n\r' +        
+            'where al.n_borrado = 0'
+        pool.query(cadena,
+            [request.body.n_idtra_grupo],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const resetLineaUser = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let cadena = 'update tra_grupolinea set n_borrado = 1 \n\r' +     
+            'where n_idtra_grupo = $1'  
+        pool.query(cadena,[request.body.n_idtra_grupo],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveLineaUser = (request, response)=>{
+    
+    var obj = valida.validaToken(request)
+    console.log(request.body.n_idpl_linea);
+    console.log(request.body.n_idtra_grupo);
+    let n_idpl_linea = request.body.n_idpl_linea;
+    let n_idtra_grupo = request.body.n_idtra_grupo;
+    if (obj.estado) {        
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea ='+ n_idpl_linea +' and n_idtra_grupo = '+ n_idtra_grupo +')) then \n\r' +
+            '           update tra_grupolinea set n_borrado = 0	where n_idpl_linea ='+ n_idpl_linea +' and n_idtra_grupo = '+ n_idtra_grupo +'; \n\r' +
+            '       else \n\r' +
+            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
+            '           VALUES (default, '+ n_idpl_linea +', '+ n_idtra_grupo +', 0, 1, 1, now(), now()); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+    
+}
+
 module.exports = {
     getempresa,
     saveEmpresa,    
@@ -805,11 +862,13 @@ module.exports = {
     getValoresGnr,
     saveValoresGnr,
     deleteValorGnr,
-    getProyectos,
     getTraGrupos,
     savetraGrupos,
     deletetraGrupos,
     getProUser,
     resetProUser,
-    saveProUser
+    saveProUser,
+    getLineaUser,
+    resetLineaUser,
+    saveLineaUser
 }
