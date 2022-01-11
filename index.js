@@ -18,7 +18,7 @@ const dbArmado = require('./dal/armado')
 const dbMetrado = require('./dal/metrado')
 
 const app = express()
-const port = 3400
+const port = 3200
 
 const ruta = '/archivos';
 
