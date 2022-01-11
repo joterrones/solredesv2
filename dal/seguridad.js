@@ -6,6 +6,7 @@ const { request, response } = require('express');
 let pool = cnx.pool;
 
 const login = (request, response) => {
+    console.log("HOLA?");
     request.body.c_clave = encriptar.encriptarlogin(request.body.c_clave);
     pool.query('Select n_idseg_userprofile, c_username, c_nombre1,c_nombre2, c_appaterno, c_apmaterno, b_activo from seg_userprofile where n_borrado = 0 and c_username = $1 and c_clave = $2',
         [request.body.c_username, request.body.c_clave], (error, results) => {

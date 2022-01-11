@@ -298,7 +298,7 @@ const deleteZona= (request, response) =>{
 const getProyecto = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select n_idpro_proyecto, c_nombre from pro_proyecto where n_borrado = 0 and (n_idpro_proyecto= $1 or 0 = $1) ',[request.body.n_idpro_proyecto],
+        pool.query('Select n_idpro_proyecto, c_nombre, c_detalle, c_color, c_rutalogo, c_rutaimg from pro_proyecto where n_borrado = 0 and (n_idpro_proyecto= $1 or 0 = $1) ',[request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -315,14 +315,15 @@ const saveProyecto = (request, response) =>{
     var obj = valida.validaToken(request)
     if (obj.estado) {        
         let n_idpro_proyecto = request.body.n_idpro_proyecto;            
-        let c_nombre = request.body.c_nombre;       
+        let c_nombre = request.body.c_nombre;    
+        let c_detalle = request.body.c_detalle;   
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idpro_proyecto from pro_proyecto where n_idpro_proyecto =\'' + n_idpro_proyecto + '\')) then \n\r' +
-            '           update pro_proyecto set c_nombre= \'' + c_nombre + '\' where n_idpro_proyecto = \''+n_idpro_proyecto+'\' ; \n\r' +
+            '           update pro_proyecto set c_nombre= \'' + c_nombre + '\', c_detalle= \'' + c_detalle + '\' where n_idpro_proyecto = \''+n_idpro_proyecto+'\' ; \n\r' +
             '       else \n\r' +
-            '           insert into pro_proyecto(n_idpro_proyecto, c_nombre, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_nombre + '\', 0, now(), 1); \n\r' +
+            '           insert into pro_proyecto(n_idpro_proyecto, c_nombre, c_detalle, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\', \'' + c_detalle + '\',0, now(), 1); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -833,6 +834,201 @@ const saveLineaUser = (request, response)=>{
     
 }
 
+const getTipoElemento = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        
+        pool.query('select n_idpl_tipoelemento, c_nombre, c_codigo from pl_tipoelemento where n_borrado = 0',        
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveTipoElemento = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idpl_tipoelemento = request.body.n_idpl_tipoelemento;
+        let c_nombre = request.body.c_nombre;
+        let c_codigo = request.body.c_codigo;   
+
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idpl_tipoelemento from pl_tipoelemento where n_idpl_tipoelemento = \'' + n_idpl_tipoelemento + '\')) then \n\r' +
+            '           update pl_tipoelemento set c_nombre= \'' + c_nombre + '\', c_codigo=\'' + c_codigo + '\' where n_idpl_tipoelemento = \''+ n_idpl_tipoelemento +'\' ; \n\r' +
+            '       else \n\r' +
+            '           insert into pl_tipoelemento(n_idpl_tipoelemento, c_nombre,c_codigo, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\', 0,now(), 1); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+            
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteTipoElemento = (request, response) =>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('update pl_tipoelemento set n_borrado= $1 where n_idpl_tipoelemento= $1',[request.body.n_idpl_tipoelemento],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getTipoMontaje = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        
+        pool.query('select n_idmon_categoriatipomontaje, c_nombre, c_codigo from mon_categoriatipomontaje where n_borrado = 0',        
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveTipoMontaje = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idmon_categoriatipomontaje = request.body.n_idmon_categoriatipomontaje;
+        let c_nombre = request.body.c_nombre;
+        let c_codigo = request.body.c_codigo;   
+
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idmon_categoriatipomontaje from mon_categoriatipomontaje where n_idmon_categoriatipomontaje = \'' + n_idmon_categoriatipomontaje + '\')) then \n\r' +
+            '           update mon_categoriatipomontaje set c_nombre= \'' + c_nombre + '\', c_codigo=\'' + c_codigo + '\' where n_idmon_categoriatipomontaje = \''+ n_idmon_categoriatipomontaje +'\' ; \n\r' +
+            '       else \n\r' +
+            '           insert into mon_categoriatipomontaje(n_idmon_categoriatipomontaje, c_nombre,c_codigo, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\', 0,now(), 1); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+            
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteTipoMontaje = (request, response) =>{
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('update mon_categoriatipomontaje set n_borrado= $1 where n_idmon_categoriatipomontaje= $1',[request.body.n_idmon_categoriatipomontaje],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveProImg = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idpro_proyecto = request.body.n_idpro_proyecto
+        let c_rutaimg = request.body.c_rutaimg;   
+        let cadena = 'update pro_proyecto set c_rutaimg= \'' + c_rutaimg + '\' where n_idpro_proyecto = \''+ n_idpro_proyecto +'\' ';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+            
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveProImgLogo = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idpro_proyecto = request.body.n_idpro_proyecto
+        let c_rutalogo = request.body.c_rutalogo;   
+        console.log(request.body.c_rutalogo);
+        let cadena = 'update pro_proyecto set c_rutalogo= \'' + c_rutalogo + '\' where n_idpro_proyecto = \''+ n_idpro_proyecto +'\' ';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+            
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveColorPro = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idpro_proyecto = request.body.n_idpro_proyecto
+        let c_color = request.body.c_color;   
+        let cadena = 'update pro_proyecto set c_color= \'' + c_color + '\' where n_idpro_proyecto = \''+ n_idpro_proyecto +'\' ';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+            
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+
 module.exports = {
     getempresa,
     saveEmpresa,    
@@ -870,5 +1066,14 @@ module.exports = {
     saveProUser,
     getLineaUser,
     resetLineaUser,
-    saveLineaUser
+    saveLineaUser,
+    getTipoElemento,
+    saveTipoElemento,
+    deleteTipoElemento,
+    getTipoMontaje,
+    saveTipoMontaje,
+    deleteTipoMontaje,
+    saveProImg,
+    saveProImgLogo,
+    saveColorPro
 }

@@ -12,9 +12,13 @@ const dbMapa = require('./dal/mapa')
 const bdAlmacen = require('./dal/almacen')
 const bdArchivos = require('./dal/admarchivos')
 const bdConfiguracionGeneral = require('./dal/configuraciongeneral')
+const dbElemento = require('./dal/elemento')
+const dbGeneral = require('./dal/general')
+const dbArmado = require('./dal/armado')
+const dbMetrado = require('./dal/metrado')
 
 const app = express()
-const port = 3200
+const port = 3400
 
 const ruta = '/archivos';
 
@@ -97,7 +101,54 @@ app.post('/api/configuracionGeneral/resetProUser',bdConfiguracionGeneral.resetPr
 app.post('/api/configuracionGeneral/saveProUser',bdConfiguracionGeneral.saveProUser)
 app.post('/api/configuracionGeneral/getLineaUser',bdConfiguracionGeneral.getLineaUser)
 app.post('/api/configuracionGeneral/resetLineaUser',bdConfiguracionGeneral.resetLineaUser)
-app.post('/api/configuracionGeneral/saveLineaUser',bdConfiguracionGeneral.saveLineaUser)
+app.post('/api/configuracionGeneral/saveLineaUser',bdConfiguracionGeneral.saveLineaUser) 
+app.post('/api/configuracionGeneral/getTipoElemento',bdConfiguracionGeneral.getTipoElemento)
+app.post('/api/configuracionGeneral/saveTipoElemento',bdConfiguracionGeneral.saveTipoElemento)
+app.post('/api/configuracionGeneral/deleteTipoElemento',bdConfiguracionGeneral.deleteTipoElemento)
+app.post('/api/configuracionGeneral/getTipoMontaje',bdConfiguracionGeneral.getTipoMontaje)
+app.post('/api/configuracionGeneral/saveTipoMontaje',bdConfiguracionGeneral.saveTipoMontaje)
+app.post('/api/configuracionGeneral/deleteTipoMontaje',bdConfiguracionGeneral.deleteTipoMontaje)
+app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
+  let archivo = req.query.archivo;
+  console.log(archivo)
+  let rutaCorta = archivo + "/Img/";
+  let dir = __dirname.replace('\dal', '')+ruta+"/"+rutaCorta;
+  let c_nombre = req.query.extension;
+  console.log(dir)
+
+  if (!fs.existsSync( __dirname.replace('\dal', '')+ruta+"/"+archivo)) {    
+    fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+archivo, 0744);
+  }
+  
+  if(!fs.existsSync( dir )) {
+    fs.mkdirSync(dir, 0744);
+  }
+  
+  req.query.c_ruta = dir;
+  req.query.c_nombre = c_nombre;
+  dir = dir + '' + c_nombre;
+
+  upload(req, res, function (err) {
+    if (err) {
+      res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
+    } else {  
+      checksum.file(dir, function (err, sum) {        
+        console.log("Ruta check: ",dir);
+        console.log(sum);
+        nuevoNombreArchivo = __dirname.replace('\dal', '')+ruta+"/"+rutaCorta+sum+path.extname(c_nombre);
+        fs.rename(dir, nuevoNombreArchivo, function(err) {
+          if ( err ) console.log('ERROR: ' + err);
+        });
+        newRuta = rutaCorta+sum+path.extname(c_nombre);
+        res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: newRuta, c_nombre: c_nombre, c_checksum: sum+path.extname(c_nombre) });
+        console.log("ERror",err)
+      })
+    }
+  });
+}) 
+app.post('/api/configuracionGeneral/saveProImg',bdConfiguracionGeneral.saveProImg)    
+app.post('/api/configuracionGeneral/saveProImgLogo',bdConfiguracionGeneral.saveProImgLogo) 
+app.post('/api/configuracionGeneral/saveColorPro',bdConfiguracionGeneral.saveColorPro)
 
 
 /*Almacen */
@@ -192,17 +243,29 @@ app.get("/api/AdmArchivos/downloadArchivo", (req, res) => {
   res.download(file);
 })
 
-/* General 
+/* General */
 app.post('/api/general/get', dbGeneral.get)
-app.post('/api/general/save', dbGeneral.save)
-app.post('/api/general/get_feriado', dbGeneral.get_feriado)
-app.post('/api/general/save_feriado', dbGeneral.save_feriado)
+app.post('/api/general/getzona', dbGeneral.getzona)
+app.post('/api/general/gettipolinea', dbGeneral.gettipolinea)
+app.post('/api/general/getlinea', dbGeneral.getlinea)
 
-app.post('/api/general/getdepartamento', dbGeneral.getdepartamento)
-app.post('/api/general/getprovincia', dbGeneral.getprovincia)
-app.post('/api/general/getdistrito', dbGeneral.getdistrito)
-app.post('/api/general/getcentropoblado', dbGeneral.getcentropoblado)
-*/
+/* Armado */
+app.post('/api/armado/get', dbArmado.get)
+app.post('/api/armado/insert',dbArmado.insert)
+app.post('/api/armado/deleteArmado', dbArmado.deleteArmado)
+app.post('/api/armado/gettipoarmado', dbArmado.gettipoarmado)
+app.post('/api/armado/getversion', dbArmado.getversion)
+app.post('/api/armado/getconfigarmado', dbArmado.getconfigarmado)
+app.post('/api/armado/insertconfigarmado', dbArmado.insertconfigarmado)
+app.post('/api/armado/getconfigtipomontaje', dbArmado.getconfigtipomontaje)
+app.post('/api/armado/insertarmadoconfigmontaje', dbArmado.insertarmadoconfigmontaje) 
+
+/* Metrado */
+app.post('/api/metrado/get', dbMetrado.get)
+app.post('/api/metrado/getmontaje', dbMetrado.getmontaje)
+app.post('/api/metrado/gettipolinea', dbMetrado.gettipolinea)
+app.post('/api/metrado/getestructurametrado', dbMetrado.getestructurametrado)
+
 
 /* Mapa 
 app.post('/api/mapa/get', dbMapa.get)
@@ -216,7 +279,6 @@ app.get("/api/mapa/download", (req, res) => {
   let rutaarchivo = __dirname + ruta + '/' + req.query.nombre;
   console.log(rutaarchivo);
   const file = path.resolve('', rutaarchivo);
-
   res.download(file);
 })
 
@@ -245,8 +307,10 @@ app.post('/api/proyecto/uploadfile', function (req, res) {
 
 app.post('/api/proyecto/get_seleccionproyecto', dbProyecto.get_seleccionproyecto);
 app.post('/api/importacion/insertplanilla', dbImportacion.insertplanilla);
-app.post('/api/importacion/insertlinea', dbImportacion.insertlinea);
+app.post('/api/importacion/insertlinea', dbImportacion.insertlinea); 
 app.post('/api/importacion/creargeom', dbImportacion.creargeom);
+app.post('/api/importacion/insertSuministro', dbImportacion.insertSuministro); 
+app.post('/api/importacion/insertMontaje', dbImportacion.insertMontaje);
 
 app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
@@ -254,5 +318,10 @@ app.post('/api/mapa/getlineas', dbMapa.getlineas);
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
 })
+
+
+/*Elemento*/
+app.post('/api/elemento/get', dbElemento.get)
+app.post('/api/elemento/updateconfig', dbElemento.updateconfig)
 
 

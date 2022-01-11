@@ -150,8 +150,96 @@ const creargeom = async (request, response) => {
 
 }
 
+const insertSuministro = async (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let i = 0;
+        let resultados = [];
+        let estructuras = request.body.estructuras;
+        estructuras.forEach(async element => {
+            try {
+                var cadena = 'select id,c_mensaje, b_flag,n_flag from fn_node_insert_planilla_suministro( \'' +
+                    element.CODIGO_GRUPO + '\',\'' +
+                    element.DESCRIPCION_GRUPO + '\',\'' +
+                    element.CODIGO_SUMINISTRO + '\',\'' +
+                    element.DESCRIPCION_SUMINISTRO + '\',\'' +
+                    element.UNIDAD + '\'' +
+                    ')';
+                let queryImportacion = await pool.query(cadena);
+
+                if (queryImportacion.rowCount > 0) {
+                    element.b_flag = queryImportacion.rows[0].b_flag
+                    element.c_mensaje = queryImportacion.rows[0].c_mensaje
+                    resultados.push(element);
+                    if (!queryImportacion.rows[0].b_flag) {
+                        console.log("insertsuministro cadena", cadena);
+                    }
+                }
+            } catch (error) {
+                element.b_flag = false;
+                element.c_mensaje = "error:" + error;
+                resultados.push(element);
+            }
+            i++;
+            if (estructuras.length <= i) {
+                response.status(200).json({ estado: true, mensaje: "vueltas: " + i, data: resultados });
+            }
+        });
+
+    } else {
+        response.status(200).json(obj)
+    }
+
+}
+
+const insertMontaje = async (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let i = 0;
+        let resultados = [];
+        let estructuras = request.body.estructuras;
+        estructuras.forEach(async element => {
+            
+            try {
+                var cadena = 'select id,c_mensaje, b_flag,n_flag from fn_node_insert_planilla_montaje( \'' +
+                    element.CODIGO_GRUPO + '\',\'' +
+                    element.DESCRIPCION_GRUPO + '\',\'' +
+                    element.CODIGO_MONTAJE + '\',\'' +
+                    element.DESCRIPCION_MONTAJE + '\',\'' +
+                    element.UNIDAD + '\'' +
+                    ')';
+                let queryImportacion = await pool.query(cadena);
+                console.log(cadena);
+                if (queryImportacion.rowCount > 0) {
+                    element.b_flag = queryImportacion.rows[0].b_flag
+                    element.c_mensaje = queryImportacion.rows[0].c_mensaje
+                    resultados.push(element);
+                    if (!queryImportacion.rows[0].b_flag) {
+                        console.log("insertsuministro cadena", cadena);
+                    }
+                }
+            } catch (error) {
+                console.log(error);
+                element.b_flag = false;
+                element.c_mensaje = "error:" + error;
+                resultados.push(element);
+            }
+            i++;
+            if (estructuras.length <= i) {
+                response.status(200).json({ estado: true, mensaje: "vueltas: " + i, data: resultados });
+            }
+        });
+
+    } else {
+        response.status(200).json(obj)
+    }
+
+}
+
 module.exports = {
     insertplanilla,
     insertlinea,
-    creargeom
+    creargeom,
+    insertSuministro,
+    insertMontaje
 }
