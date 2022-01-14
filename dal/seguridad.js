@@ -334,7 +334,25 @@ const saveUserPro = (request, response)=>{
     
 }
 
-
+const getPantallaRol = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let cadena = 'select ptr.n_idseg_pantalla,pt.c_codigo, ptr.n_idseg_rol, ptr.c_permiso from seg_pantallarol ptr \n\r' +
+            'inner join seg_pantalla pt on pt.n_idseg_pantalla = ptr.n_idseg_pantalla \n\r' + 
+            'inner join seg_userprofile usu on usu.n_idseg_rol = ptr.n_idseg_rol \n\r' + 
+            'where ptr.n_borrado = 0 and usu.n_idseg_userprofile = $1'  
+        pool.query(cadena,[request.body.n_idseg_userprofile],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
 
 
 module.exports = {
@@ -350,5 +368,6 @@ module.exports = {
     getProyectos,
     getUserPro,
     saveUserPro,
-    resetUserPro
+    resetUserPro,
+    getPantallaRol
 }

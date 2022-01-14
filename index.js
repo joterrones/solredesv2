@@ -63,7 +63,8 @@ app.post('/api/seguridad/deleteRol',dbSeguridad.deleteRol)
 app.post('/api/seguridad/getProyectos',dbSeguridad.getProyectos) 
 app.post('/api/seguridad/getUserPro',dbSeguridad.getUserPro) 
 app.post('/api/seguridad/saveUserPro',dbSeguridad.saveUserPro) 
-app.post('/api/seguridad/resetUserPro',dbSeguridad.resetUserPro)
+app.post('/api/seguridad/resetUserPro',dbSeguridad.resetUserPro) 
+app.post('/api/seguridad/getPantallaRol',dbSeguridad.getPantallaRol)
 
 /*Configuracion General */
 app.post('/api/configuracionGeneral/getempresa',bdConfiguracionGeneral.getempresa)
