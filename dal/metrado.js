@@ -18,31 +18,34 @@ const get = (request, response) => {
     }
     console.log(request.body.n_idpl_tipolinea);
     var tipoelementos, elementos;
-    pool.query('select n_idpl_tipoelemento,c_codigo,c_nombre,n_orden from pl_tipoelemento where n_borrado = 0 and (n_idpl_tipolinea=$1 or $1=0 ) order by n_orden ',
+    pool.query('select n_idpl_tipoelemento,c_codigo,c_nombre,n_orden from pl_tipoelemento where n_borrado = 0 and (n_idpl_tipolinea=$1 ) order by n_orden ',
       [request.body.n_idpl_tipolinea], (error, results) => {
         if (error) {
           response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos del metrado!: " + error.stack, data: null })
         } else { 
+
           this.tipoelementos = results.rows;
-          pool.query(
-            'select ' +
-            '	  n_idpl_elemento ' +
-            '	  ,c_codigoelemento c_codigo ' +
-            '	  ,n_idpl_tipoelemento ' +
-            '	  ,c_nombreelemento c_nombre ' +
-            '	  ,c_unidadmedida ' +
-            '	  ,SUM( coalesce(n_cantidad,0)) cantidad ' +
-            'from vw_metradoestructura  ' +
-            'where	' +
-            ' 	n_version = $1 ' +
-            '	  and n_idpl_linea = $2 ' +
-            'group by ' +
-            '	n_idpl_tipoelemento ' +
-            ' 	,n_idpl_elemento ' +
-            '	  ,c_codigoelemento ' +
-            '  	,c_nombreelemento ' +
-            '  	,c_unidadmedida ',
-            [request.body.n_version, request.body.n_idpl_linea], (error, results) => {
+          let n_version = request.body.n_version;
+          let n_idpl_linea = request.body.n_idpl_linea;
+          let cadena = 'select ' +
+          '	  n_idpl_elemento ' +
+          '	  ,c_codigoelemento c_codigo ' +
+          '	  ,n_idpl_tipoelemento ' +
+          '	  ,c_nombreelemento c_nombre ' +
+          '	  ,c_unidadmedida ' +
+          '	  ,SUM( coalesce(n_cantidad,0)) cantidad ' +
+          'from vw_metradoestructura  ' +
+          'where	' +
+          ' 	n_version = ' + n_version + ' ' +
+          '	  and n_idpl_linea = ' + n_idpl_linea + ' ' +
+          'group by ' +
+          '	n_idpl_tipoelemento ' +
+          ' 	,n_idpl_elemento ' +
+          '	  ,c_codigoelemento ' +
+          '  	,c_nombreelemento ' +
+          '  	,c_unidadmedida ';
+          pool.query(cadena,            
+             (error, results) => {
               if (error) {
                 console.log(error);                  
                 response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos del metrado!.", data: null })
@@ -70,6 +73,10 @@ const get = (request, response) => {
   
   const getmontaje = (request, response) => {
     //pool = cnx.dynamic_connection(request.body.proyecto);
+    console.log("idtipoLinea",request.body.n_idpl_tipolinea);
+    console.log("idVersion",request.body.n_version);
+    console.log("idLinea",request.body.n_idpl_linea );
+
     if (request.body.n_idpl_tipolinea == null) {
       request.body.n_idpl_tipolinea = 0;
     }
@@ -206,9 +213,7 @@ const get = (request, response) => {
         }
       })
   }
-  
-  
-  
+
   module.exports = {
     get,
     getmontaje,

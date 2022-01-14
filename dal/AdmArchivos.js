@@ -41,15 +41,16 @@ const saveArchivo = (request,response)=>{
         let c_checksum = request.body.c_checksum;
         let c_tipo = request.body.c_tipo;
         let n_iddoc_archivopadre = request.body.n_iddoc_archivopadre;
+        let n_id_usermodi = request.body.n_id_usermodi;
         console.log("Padre",n_iddoc_archivopadre);
 
         let cadena ='do $$ \n\r' +
         '   begin \n\r' +
         '       if(exists(select n_iddoc_archivo from doc_archivo where n_borrado = 0 and n_iddoc_archivo =\'' + n_iddoc_archivo + '\')) then \n\r' +
-        '           update doc_archivo set c_nombre= \''+ c_nombre +'\', c_rutalogica= \'' + c_rutalogica + '\', n_iddoc_archivopadre=\''+ n_iddoc_archivopadre +'\', d_fechamodi= now() where n_iddoc_archivo =\'' + n_iddoc_archivo + '\'; \n\r' +
+        '           update doc_archivo set c_nombre= \''+ c_nombre +'\', c_rutalogica= \'' + c_rutalogica + '\', n_iddoc_archivopadre=\''+ n_iddoc_archivopadre +'\', n_is_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_iddoc_archivo =\'' + n_iddoc_archivo + '\'; \n\r' +
         '       else \n\r' +
         '           insert into doc_archivo(n_iddoc_archivo, n_idpro_proyecto, c_nombre, c_ruta, c_rutalogica, c_checksum, c_tipo, n_iddoc_archivopadre, n_borrado, d_fechacrea, d_fechamodi, n_id_usercrea) \n\r' +
-        '           values (default,'+ n_idpro_proyecto +',\'' + c_nombre + '\',\''+ c_ruta +'\', \''+ c_rutalogica +'\',\''+ c_checksum +'\', \''+ c_tipo +'\','+ n_iddoc_archivopadre+', 0, now(), now(), 1); \n\r' +
+        '           values (default,'+ n_idpro_proyecto +',\'' + c_nombre + '\',\''+ c_ruta +'\', \''+ c_rutalogica +'\',\''+ c_checksum +'\', \''+ c_tipo +'\','+ n_iddoc_archivopadre+', 0, now(), now(), '+n_id_usermodi+'); \n\r' +
         '       end if; \n\r' +
         '   end \n\r' +
         '$$';        
@@ -69,8 +70,10 @@ const saveArchivo = (request,response)=>{
 
 const deleteArchivo = (request,response) =>{
     var obj = valida.validaToken(request)
+    let n_id_usermodi = request.body.n_id_usermodi;
+    let n_iddoc_archivo = request.body.n_iddoc_archivo;
     if (obj.estado) {
-        pool.query('update doc_archivo set n_borrado = $1 where n_iddoc_archivo = $1', [request.body.n_iddoc_archivo],
+        pool.query('update doc_archivo set n_borrado = 1, n_is_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_iddoc_archivo ='+n_iddoc_archivo+' ',
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })

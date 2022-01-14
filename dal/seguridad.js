@@ -6,7 +6,6 @@ const { request, response } = require('express');
 let pool = cnx.pool;
 
 const login = (request, response) => {
-    console.log("HOLA?");
     request.body.c_clave = encriptar.encriptarlogin(request.body.c_clave);
     pool.query('Select n_idseg_userprofile, c_username, c_nombre1,c_nombre2, c_appaterno, c_apmaterno, b_activo from seg_userprofile where n_borrado = 0 and c_username = $1 and c_clave = $2',
         [request.body.c_username, request.body.c_clave], (error, results) => {
@@ -31,7 +30,7 @@ const login = (request, response) => {
 const get = (request, response) => {
     var obj = valida.validaToken(request)    
     if (obj.estado) {
-        let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_appaterno, u.c_dni, r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u \n\r' +
+        let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u  \n\r' +
             'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol \n\r' +            
             'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1)'
         pool.query(cadena,
@@ -48,27 +47,46 @@ const get = (request, response) => {
     }
 }
 
-const save = (request, response) => {
+const valDni = (request, response) => {
+    
+        let c_dni = request.body.c_dni;
+        console.log(c_dni);
+        let cadena ='select c_dni from seg_userprofile where n_borrado = 0 and c_dni =\'' + c_dni + '\'';
+
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "DNI EXISTENTE", data: results.rows })
+                }
+            })
+    
+}
+
+const saveUser = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
 
         let c_username = request.body.c_username;
         let c_clave = encriptar.encriptarlogin(request.body.c_clave);
         let c_nombre1 = request.body.c_nombre1;
+        let c_nombre2 = request.body.c_nombre2;
         let c_appaterno = request.body.c_appaterno;
+        let c_apmaterno = request.body.c_apmaterno;
         let c_dni = request.body.c_dni;
         let n_idseg_userprofile = request.body.n_idseg_userprofile;
-        /*let c_phone = request.body.c_phone;*/
         let n_idseg_rol = request.body.n_idseg_rol;
-        /*let n_idgen_entidad = request.body.n_idgen_entidad;*/
-
+        let n_id_usermodi = request.body.n_id_usermodi;
+        console.log("SAVE",n_id_usermodi);
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and n_idseg_userprofile =\'' + n_idseg_userprofile + '\')) then \n\r' +
-            '           update seg_userprofile set c_nombre1= \'' + c_nombre1 + '\', c_appaterno=\'' + c_appaterno + '\', c_dni=\'' + c_dni + '\', n_idseg_rol=' + n_idseg_rol +',c_username=\'' + c_username + '\' where n_idseg_userprofile =\'' + n_idseg_userprofile + '\'; \n\r' +
+            '           update seg_userprofile set c_nombre1= \'' + c_nombre1 + '\',c_nombre2= \'' + c_nombre2 + '\', c_appaterno=\'' + c_appaterno + '\', c_apmaterno=\'' + c_apmaterno + '\', c_dni=\'' + c_dni + '\', n_idseg_rol=' + n_idseg_rol +',c_username=\'' + c_username + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_userprofile =\'' + n_idseg_userprofile + '\'; \n\r' +
             '       else \n\r' +
-            '           insert into seg_userprofile(n_idseg_userprofile,c_username,c_clave,c_nombre1,c_appaterno,c_dni,n_idseg_rol,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_username + '\',\'' + c_clave + '\',\'' + c_nombre1 + '\',\'' + c_appaterno + '\',\'' + c_dni + '\', '+ n_idseg_rol +', 0,now(),1); \n\r' +
+            '           insert into seg_userprofile(n_idseg_userprofile,c_username,c_clave,c_nombre1,c_nombre2,c_appaterno,c_apmaterno,c_dni,n_idseg_rol,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_username + '\',\'' + c_clave + '\',\'' + c_nombre1 + '\',\'' + c_nombre2 + '\',\'' + c_appaterno + '\',\'' + c_apmaterno + '\',\'' + c_dni + '\', '+ n_idseg_rol +', 0,now(),'+n_id_usermodi+'); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -91,8 +109,9 @@ const delete_usuario = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         let n_idseg_userprofile = request.body.n_idseg_userprofile;
+        let n_id_usermodi = request.body.n_id_usermodi;
         console.log(n_idseg_userprofile)
-        pool.query('update seg_userprofile set n_borrado = n_idseg_userprofile where n_idseg_userprofile = $1', [n_idseg_userprofile],            
+        pool.query('update seg_userprofile set n_borrado = 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now()  where n_idseg_userprofile ='+n_idseg_userprofile+' ',             
             (error, results) => {
                 if (error) {
                     console.log(error);
@@ -109,7 +128,7 @@ const delete_usuario = (request, response) => {
 const getrole = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select n_idseg_rol, c_nombre, n_nivel from seg_rol where (n_idseg_rol= $1 or 0 = $1) ',[request.body.n_idseg_rol],
+        pool.query('Select n_idseg_rol, c_nombre, n_nivel from seg_rol where n_borrado = 0 and (n_idseg_rol= $1 or 0 = $1) ',[request.body.n_idseg_rol],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -129,14 +148,15 @@ const saveRol = (request, response)=>{
         let n_idseg_rol = request.body.n_idseg_rol;
         let c_nombre = request.body.c_nombre;
         let n_nivel = request.body.n_nivel;    
+        let n_id_usermodi = request.body.n_id_usermodi;
         console.log(n_idseg_rol)        
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idseg_rol from seg_rol where n_idseg_rol =\'' + n_idseg_rol + '\')) then \n\r' +
-            '           update seg_rol set c_nombre= \'' + c_nombre + '\', n_nivel=\'' + n_nivel + '\' where n_idseg_rol = \''+n_idseg_rol+'\' ; \n\r' +
+            '           update seg_rol set c_nombre= \'' + c_nombre + '\', n_nivel=\'' + n_nivel + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_rol = \''+n_idseg_rol+'\' ; \n\r' +
             '       else \n\r' +
-            '           insert into seg_rol(n_idseg_rol,c_nombre,n_nivel) \n\r' +
-            '           values (default,\'' + c_nombre + '\',\'' + n_nivel + '\'); \n\r' +
+            '           insert into seg_rol(n_idseg_rol, c_nombre, n_nivel,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + n_nivel + '\',0 ,now(), '+n_id_usermodi+'); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -158,8 +178,10 @@ const deleteRol=(request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         let n_idseg_rol = request.body.n_idseg_rol;
+        let n_id_usermodi = request.body.n_id_usermodi;
         console.log(n_idseg_rol)
-        pool.query('delete from seg_rol where n_idseg_rol = $1', [n_idseg_rol],            
+
+        pool.query('update seg_rol set n_borrado = 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_rol ='+n_idseg_rol+' ',          
             (error, results) => {
                 if (error) {
                     console.log(error);
@@ -319,7 +341,8 @@ module.exports = {
     login,
     get,
     getrole,
-    save,
+    valDni,
+    saveUser,
     resetearclave,
     delete_usuario,
     saveRol,

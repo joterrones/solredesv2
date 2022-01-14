@@ -53,8 +53,9 @@ app.use('/archivos', express.static(__dirname + ruta));
 /* Seguridad */
 app.post('/api/seguridad/login', dbSeguridad.login)
 app.post('/api/seguridad/get', dbSeguridad.get)
-app.post('/api/seguridad/getrole', dbSeguridad.getrole)
-app.post('/api/seguridad/save', dbSeguridad.save)
+app.post('/api/seguridad/getrole', dbSeguridad.getrole) 
+app.post('/api/seguridad/valDni', dbSeguridad.valDni)
+app.post('/api/seguridad/saveUser', dbSeguridad.saveUser)
 app.post('/api/seguridad/resetearclave', dbSeguridad.resetearclave)
 app.post('/api/seguridad/delete_usuario', dbSeguridad.delete_usuario)
 app.post('/api/seguridad/saveRol', dbSeguridad.saveRol)
@@ -310,8 +311,33 @@ app.post('/api/importacion/insertplanilla', dbImportacion.insertplanilla);
 app.post('/api/importacion/insertlinea', dbImportacion.insertlinea); 
 app.post('/api/importacion/creargeom', dbImportacion.creargeom);
 app.post('/api/importacion/insertSuministro', dbImportacion.insertSuministro); 
-app.post('/api/importacion/insertMontaje', dbImportacion.insertMontaje);
-
+app.post('/api/importacion/insertMontaje', dbImportacion.insertMontaje); 
+app.post('/api/importacion/deleteEstructLinea', dbImportacion.deleteEstructLinea); 
+app.post('/api/importacion/deleteAllEstructLinea', dbImportacion.deleteAllEstructLinea);
+app.get("/api/importacion/downloadPlantillaSuministro", (req, res) => {
+  let rutaarchivo = __dirname + ruta + '/plantillas/Cargar_Elemento.xlsx' ;
+  console.log(rutaarchivo);
+  const file = path.resolve('', rutaarchivo);
+  res.download(file);
+})
+app.get("/api/importacion/downloadPlantillaMontaje", (req, res) => {
+  let rutaarchivo = __dirname + ruta + '/plantillas/Cargar_Montaje.xlsx';
+  console.log(rutaarchivo);
+  const file = path.resolve('', rutaarchivo);
+  res.download(file);
+})
+app.get("/api/importacion/downloadPlantillaLinea", (req, res) => {
+  let rutaarchivo = __dirname + ruta + '/plantillas/Cargar_Linea.xlsx';
+  console.log(rutaarchivo);
+  const file = path.resolve('', rutaarchivo);
+  res.download(file);
+})
+app.get("/api/importacion/downloadPlantillaRedes", (req, res) => {
+  let rutaarchivo = __dirname + ruta + '/plantillas/Carga_Redes.xlsx';
+  console.log(rutaarchivo);
+  const file = path.resolve('', rutaarchivo);
+  res.download(file);
+})
 app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
 

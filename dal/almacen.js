@@ -34,15 +34,16 @@ const saveAlmacen = (request,response)=>{
         let n_idalm_almacen = request.body.n_idalm_almacen;   
         let c_nombre = request.body.c_nombre;
         let c_direccion = request.body.c_direccion;                 
-        let n_idpro_proyecto = request.body.n_idpro_proyecto;       
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;     
+        let n_id_usermodi = request.body.n_id_usermodi;  
        
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idalm_almacen from alm_almacen where n_borrado = 0 and n_idalm_almacen =\'' + n_idalm_almacen + '\')) then \n\r' +
-            '           update alm_almacen set c_nombre= \'' + c_nombre + '\', c_direccion=\'' + c_direccion + '\', n_idpro_proyecto=' + n_idpro_proyecto +' where n_idalm_almacen =\'' + n_idalm_almacen + '\'; \n\r' +
+            '           update alm_almacen set c_nombre= \'' + c_nombre + '\', c_direccion=\'' + c_direccion + '\', n_idpro_proyecto=' + n_idpro_proyecto +', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idalm_almacen =\'' + n_idalm_almacen + '\'; \n\r' +
             '       else \n\r' +
             '           insert into alm_almacen(n_idalm_almacen,c_nombre,c_direccion,n_idpro_proyecto,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_nombre + '\',\'' + c_direccion + '\',' + n_idpro_proyecto + ', 0, now(), 1); \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_direccion + '\',' + n_idpro_proyecto + ', 0, now(), '+n_id_usermodi+'); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -62,8 +63,10 @@ const saveAlmacen = (request,response)=>{
 }
 const deleteAlmacen = (request,response) =>{
     var obj = valida.validaToken(request)
+    let n_id_usermodi = request.body.n_id_usermodi;
+    let n_idalm_almacen = request.body.n_idalm_almacen;
     if (obj.estado) {
-        pool.query('update alm_almacen set n_borrado= $1 where n_idalm_almacen= $1',[request.body.n_idalm_almacen],
+        pool.query('update alm_almacen set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idalm_almacen='+n_idalm_almacen+' ',
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
@@ -107,16 +110,17 @@ const saveGuia = (request,response)=>{
         let c_nombre = request.body.c_nombre;        
         let c_nroguia = request.body.c_nroguia;
         let c_ruc = request.body.c_ruc;
-        let c_observacion = request.body.c_observacion;                               
+        let c_observacion = request.body.c_observacion;     
+        let n_id_usermodi = request.body.n_id_usermodi;                          
 
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idalm_guia from alm_guia where n_borrado = 0 and n_idalm_guia =\'' + n_idalm_guia + '\')) then \n\r' +
             '           update alm_guia set c_nombre= \'' + c_nombre + '\', c_direccion=\'' + c_direccion + '\', n_idalm_almacen=' + n_idalm_almacen +',  \n\r' +
-            '                  n_idgen_periodo=' + n_idgen_periodo +', c_nroguia=\'' + c_nroguia + '\', c_ruc=\'' + c_ruc + '\', c_observacion=\'' + c_observacion + '\' where n_idalm_guia =\'' + n_idalm_guia + '\'; \n\r' +
+            '                  n_idgen_periodo=' + n_idgen_periodo +', c_nroguia=\'' + c_nroguia + '\', c_ruc=\'' + c_ruc + '\', c_observacion=\'' + c_observacion + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idalm_guia =\'' + n_idalm_guia + '\'; \n\r' +
             '       else \n\r' +
             '           insert into alm_guia(n_idalm_guia, c_nombre, c_direccion, n_idgen_periodo, n_idalm_almacen, c_nroguia, c_ruc, d_fecha, c_observacion, b_aprobar, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_nombre + '\',\'' + c_direccion + '\',' + n_idgen_periodo + ',' + n_idalm_almacen + ', \'' + c_nroguia + '\', \'' + c_ruc + '\', now(),\'' + c_observacion + '\', '+ " false"+' ,0, now(), 1); \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_direccion + '\',' + n_idgen_periodo + ',' + n_idalm_almacen + ', \'' + c_nroguia + '\', \'' + c_ruc + '\', now(),\'' + c_observacion + '\', '+ " false"+' ,0, now(), '+n_id_usermodi+'); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -136,8 +140,10 @@ const saveGuia = (request,response)=>{
 }
 const deleteGuia = (request,response) =>{
     var obj = valida.validaToken(request)
+    let n_idalm_guia = request.body.n_idalm_guia;
+    let n_id_usermodi = request.body.n_id_usermodi;
     if (obj.estado) {
-        pool.query('update alm_guia set n_borrado= $1 where n_idalm_guia= $1',[request.body.n_idalm_guia],
+        pool.query('update alm_guia set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idalm_guia='+n_idalm_guia+' ',
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
@@ -261,16 +267,18 @@ const saveDetalleGuia = (request,response)=>{
         let n_cantidad = request.body.n_cantidad;                                    
         let n_idalm_guia = request.body.n_idalm_guia;
         let n_idpl_elemento = request.body.n_idpl_elemento;
+        let n_id_usermodi = request.body.n_id_usermodi;
+
         console.log("nombre",c_nombre)
         console.log("ruta",c_ruta)
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idalm_detalleguia from alm_detalleguia where n_borrado = 0 and n_idalm_detalleguia =\'' + n_idalm_detalleguia + '\')) then \n\r' +
-            '           update alm_detalleguia set n_cantidad= \'' + n_cantidad + '\', n_idpl_elemento=\' '+ n_idpl_elemento +'\', c_ruta=\''+ c_ruta +'\', c_nombre=\''+ c_nombre +'\'  \n\r' +
+            '           update alm_detalleguia set n_cantidad= \'' + n_cantidad + '\', n_idpl_elemento=\' '+ n_idpl_elemento +'\', c_ruta=\''+ c_ruta +'\', c_nombre=\''+ c_nombre +'\' , n_id_usermodi='+n_id_usermodi+', d_fechamodi= now()  \n\r' +
             '                  where n_idalm_detalleguia =\'' + n_idalm_detalleguia + '\'; \n\r' +
             '       else \n\r' +
             '           insert into alm_detalleguia(n_idalm_detalleguia, n_cantidad, n_idalm_guia,n_idpl_elemento, c_ruta, c_nombre, n_borrado, d_fechacrea, n_id_usercrea)\n\r' +
-            '           values (default,\'' + n_cantidad + '\',\'' + n_idalm_guia + '\','+ n_idpl_elemento +', \''+ c_ruta+'\',\''+ c_nombre +'\',0, now(), 1);\n\r' +
+            '           values (default,\'' + n_cantidad + '\',\'' + n_idalm_guia + '\','+ n_idpl_elemento +', \''+ c_ruta+'\',\''+ c_nombre +'\',0, now(), '+n_id_usermodi+');\n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -325,8 +333,12 @@ const saveImgDetalleGuia  = (request,response)=>{
 
 const deleteDetalleGuia = (request,response) =>{
     var obj = valida.validaToken(request)
+    
+    let n_idalm_detalleguia = request.body.n_idalm_detalleguia;
+    let n_id_usermodi = request.body.n_id_usermodi;
+
     if (obj.estado) {
-        pool.query('update alm_detalleguia set n_borrado= $1 where n_idalm_detalleguia= $1',[request.body.n_idalm_detalleguia],
+        pool.query('update alm_detalleguia set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idalm_detalleguia='+n_idalm_detalleguia+' ',
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })

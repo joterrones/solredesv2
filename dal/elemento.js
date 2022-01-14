@@ -84,8 +84,8 @@ const updateconfig = (request, response) => {
     request.body.c_seccionconductor = "";
   }
 
-  pool.query('update pl_elemento set c_material=$2, c_esfuerzo=$3, c_altura=$4, c_seccionconductor=$5, b_partidanueva=$6 where n_idpl_elemento =$1 RETURNING *',
-    [request.body.n_idpl_elemento, request.body.c_material, request.body.c_esfuerzo, request.body.c_altura, request.body.c_seccionconductor, request.body.b_partidanueva], (error, results) => {
+  pool.query('update pl_elemento set c_material=$2, c_esfuerzo=$3, c_altura=$4, c_seccionconductor=$5, b_partidanueva=$6, n_id_usermodi=$7, d_fechamodi= now() where n_idpl_elemento =$1 RETURNING *',
+    [request.body.n_idpl_elemento, request.body.c_material, request.body.c_esfuerzo, request.body.c_altura, request.body.c_seccionconductor, request.body.b_partidanueva,request.body.n_id_usermodi], (error, results) => {
       if (error) {
         response.status(200).json({ estado: false, mensaje: "ocurrio un error al actualizar el elemento!.", data: null })
       } else {
