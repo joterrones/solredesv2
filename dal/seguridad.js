@@ -354,6 +354,58 @@ const getPantallaRol = (request, response) => {
     }
 }
 
+const getPantalla = (request, response) => {
+    var obj = valida.validaToken(request);
+    console.log(request.body.n_idseg_rol);
+    if (obj.estado) {
+        let cadena = 'select pt.n_idseg_pantalla, pt.c_codigo, pt.c_nombre,ptr.n_idseg_rol, ptr.c_permiso from seg_pantalla pt \n\r' +
+        'left join seg_pantallarol ptr on ptr.n_idseg_pantalla = pt.n_idseg_pantalla and ptr.n_idseg_rol = $1 \n\r' + 
+        'where pt.n_borrado = 0'  
+        pool.query(cadena,[request.body.n_idseg_rol],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {                    
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const updatePantallaRol = (request, response)=>{    
+    var obj = valida.validaToken(request)
+    let n_idseg_pantalla = request.body.n_idseg_pantalla;
+    let n_idseg_rol = request.body.n_idseg_rol;
+    let c_permiso = request.body.c_permiso;
+    let n_id_usermodi = request.body.n_id_usermodi;
+    if (obj.estado) {        
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idseg_pantalla, n_idseg_rol from seg_pantallarol where n_idseg_pantalla = '+ n_idseg_pantalla +' and n_idseg_rol = '+ n_idseg_rol +')) then \n\r' +
+            '           update seg_pantallarol set c_permiso = \''+c_permiso+'\', n_id_usermodi='+n_id_usermodi+' where n_idseg_pantalla = '+ n_idseg_pantalla +' and n_idseg_rol = '+ n_idseg_rol +'; \n\r' +
+            '       else \n\r' +
+            '           INSERT INTO seg_pantallarol(n_idseg_pantallarol, n_idseg_pantalla, n_idseg_rol, c_permiso, n_borrado, n_id_usercrea, d_fechacrea, d_fechamodi) \n\r' +
+            '           VALUES (default, '+ n_idseg_pantalla +', '+ n_idseg_rol +', \''+c_permiso+'\',0, '+n_id_usermodi+',  now(), now()); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+            console.log(cadena);
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+    
+}
 
 module.exports = {
     login,
@@ -369,5 +421,7 @@ module.exports = {
     getUserPro,
     saveUserPro,
     resetUserPro,
-    getPantallaRol
+    getPantallaRol,
+    getPantalla,
+    updatePantallaRol
 }
