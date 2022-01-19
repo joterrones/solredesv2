@@ -278,6 +278,28 @@ const deleteAllEstructLinea = (request,response) =>{
         response.status(200).json(obj)
     }
 }
+
+const orientacionautomatica = (request,response) =>{
+    let idversion = request.body.idversion;
+    console.log(idversion);
+
+    var obj = valida.validaToken(request)
+    if (obj.estado) { 
+        pool.query('select * from fn_orientacionautomatica('+idversion+')',
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+
 module.exports = {
     insertplanilla,
     insertlinea,
@@ -285,5 +307,6 @@ module.exports = {
     insertSuministro,
     insertMontaje,
     deleteEstructLinea,
-    deleteAllEstructLinea
+    deleteAllEstructLinea,
+    orientacionautomatica
 }

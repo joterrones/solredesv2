@@ -11,6 +11,7 @@ const get = (request, response) => {
     }
   
     pool.query('select  ' +
+      'p.c_codigo c_codigoestructura, ' +
       'p.n_idpl_estructura, ' +
       'p.c_latitud, ' +
       'p.c_longitud, ' +
@@ -41,7 +42,7 @@ const get = (request, response) => {
       request.body.n_idpl_estructura == 0
     }
   
-    pool.query('select a.c_codigo,a.c_nombre, ea.n_cantidad from pl_armado a '+
+    pool.query('select a.c_codigo,a.c_nombre, ea.n_cantidad, coalesce(ea.n_orientacion,0) n_orientacion from pl_armado a '+
     'inner join pl_estructuraarmado ea on a.n_idpl_armado = ea.n_idpl_armado and ea.n_borrado = 0 '+
     'where a.n_borrado = 0 and ea.n_idpl_estructura = $1',
       [request.body.n_idpl_estructura]

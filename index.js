@@ -309,6 +309,8 @@ app.post('/api/importacion/insertSuministro', dbImportacion.insertSuministro);
 app.post('/api/importacion/insertMontaje', dbImportacion.insertMontaje); 
 app.post('/api/importacion/deleteEstructLinea', dbImportacion.deleteEstructLinea); 
 app.post('/api/importacion/deleteAllEstructLinea', dbImportacion.deleteAllEstructLinea);
+app.post('/api/importacion/orientacionautomatica', dbImportacion.orientacionautomatica);
+
 app.get("/api/importacion/downloadPlantillaSuministro", (req, res) => {
   let rutaarchivo = __dirname + ruta + '/plantillas/Cargar_Elemento.xlsx' ;
   console.log(rutaarchivo);
