@@ -220,8 +220,8 @@ const getZona = (request, response) => {
     if (obj.estado) {
         pool.query('Select z.n_idpl_zona, z.n_idpro_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z \n\r' +
         'left join pro_proyecto pr on pr.n_idpro_proyecto = z.n_idpro_proyecto \n\r' +            
-        'where z.n_borrado = 0 and (z.n_idpl_zona = $1 or 0 = $1)'
-        ,[request.body.n_idpl_zona],
+        'where z.n_borrado = 0 and (z.n_idpl_zona = $1 or 0 = $1) and pr.n_idpro_proyecto = $2'
+        ,[request.body.n_idpl_zona, request.body.n_idpro_proyecto],
             (error, results) => {
                 
                 if (error) {
@@ -1029,8 +1029,9 @@ const saveProImgLogo = (request, response) => {
     if (obj.estado) {
         let n_idpro_proyecto = request.body.n_idpro_proyecto
         let c_rutalogo = request.body.c_rutalogo;   
+        let n_id_usermodi = request.body.n_id_usermodi;   
         console.log(request.body.c_rutalogo);
-        let cadena = 'update pro_proyecto set c_rutalogo= \'' + c_rutalogo + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idpro_proyecto = \''+ n_idpro_proyecto +'\' ';
+        let cadena = 'update pro_proyecto set c_rutalogo= \'' + c_rutalogo + '\', n_is_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idpro_proyecto = \''+ n_idpro_proyecto +'\' ';
         pool.query(cadena,
             (error, results) => {
                 if (error) {

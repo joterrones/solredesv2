@@ -1,6 +1,61 @@
+const { result } = require('lodash');
 const cnx = require('../common/appsettings')
 const valida = require('../common/validatoken')
 let pool = cnx.pool;
+
+const getLineas = (request, response) => {
+    
+    var obj = valida.validaToken(request)
+    if(obj.estado){
+       
+        pool.query('select  pl.c_codigo, count(ple.c_nombre) as n_cantidad from pl_linea as pl '+
+        'inner join  pl_estructura ple on ple.n_idpl_linea = pl.n_idpl_linea '+
+        'where pl.n_borrado = 0 and ple.n_borrado = 0 '+
+        'group by pl.c_codigo',
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                response.status(200).json({ estado: false, mensaje: "DB: error datos. getLineas1" + error.stack, data: null })
+            } else {
+                let lineas = [];
+                let cantidadesdeestructuras = [];
+                let datos = results.rows;
+                datos.forEach(element => {
+                    lineas.push(element.c_codigo);
+                    cantidadesdeestructuras.push(parseInt(element.n_cantidad));
+                });
+
+                pool.query('select  plz.c_nombre, count(pl.c_codigo) as n_cantidad from pl_zona as plz '+
+                'inner join  pl_linea pl on pl.n_idpl_zona = plz.n_idpl_zona '+
+                'where plz.n_borrado = 0 and pl.n_borrado = 0 '+
+                'group by plz.c_nombre',
+                (error, results) => {
+                    if(error){
+                        console.log(error);
+                        response.status(200).json({ estado: false, mensaje: "DB: error datos. getLineas2" + error.stack, data: null })
+                    } else{
+                        let zonas = [];
+                        let cantidadesdelineas = [];
+                        let datos = results.rows;
+                        datos.forEach(element => {
+                            zonas.push(element.c_nombre);
+                            cantidadesdelineas.push(parseInt(element.n_cantidad));
+                        });
+                        response.status(200).json({
+                            estado: true, mensaje: "", data: {
+                                graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras },
+                                graficozonas: { claves: zonas, cantidades: cantidadesdelineas },
+                            }
+                        })
+                    }
+                });                
+            }
+        });
+    }
+    else {
+        response.status(200).json(obj)
+    }
+}
 
 const getDepartamento = (request, response) => {
     var obj = valida.validaToken(request)
@@ -823,6 +878,7 @@ module.exports = {
     getDepartamento,
     getcantidad,
     gettotales,
-    getDashboardBolsa
+    getDashboardBolsa,
+    getLineas
 }
 
