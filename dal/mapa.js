@@ -36,6 +36,25 @@ const get = (request, response) => {
       })
   }
 
+  const getdetalle = (request, response) => {
+    if (request.body.n_idpl_estructura == null) {
+      request.body.n_idpl_estructura == 0
+    }
+  
+    pool.query('select a.c_codigo,a.c_nombre, ea.n_cantidad from pl_armado a '+
+    'inner join pl_estructuraarmado ea on a.n_idpl_armado = ea.n_idpl_armado and ea.n_borrado = 0 '+
+    'where a.n_borrado = 0 and ea.n_idpl_estructura = $1',
+      [request.body.n_idpl_estructura]
+      , (error, results) => {
+        if (error) {
+          console.log(error);
+          response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos para el mapa!.", data: null })
+        } else {
+          response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+        }
+      })
+  }
+
   
 const getlineas = (request, response) => {
 
@@ -79,5 +98,6 @@ const getlineas = (request, response) => {
 
 module.exports = {
     get,
-    getlineas
+    getlineas,
+    getdetalle
 }
