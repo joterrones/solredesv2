@@ -273,14 +273,6 @@ app.post('/api/metrado/gettipolinea', dbMetrado.gettipolinea)
 app.post('/api/metrado/getestructurametrado', dbMetrado.getestructurametrado)
 
 
-/* Mapa 
-app.post('/api/mapa/get', dbMapa.get)
-app.post('/api/mapa/getxls', dbMapa.getxls)
-app.post('/api/mapa/getfiles', dbMapa.getfiles)
-app.post('/api/mapa/get_proyecto_atributo', dbMapa.get_proyecto_atributo)
-app.post('/api/mapa/gettareasincompletas', dbMapa.gettareasincompletas)
-*/
-
 app.get("/api/mapa/download", (req, res) => {
   let rutaarchivo = __dirname + ruta + '/' + req.query.nombre;
   console.log(rutaarchivo);
@@ -319,6 +311,8 @@ app.post('/api/importacion/insertSuministro', dbImportacion.insertSuministro);
 app.post('/api/importacion/insertMontaje', dbImportacion.insertMontaje); 
 app.post('/api/importacion/deleteEstructLinea', dbImportacion.deleteEstructLinea); 
 app.post('/api/importacion/deleteAllEstructLinea', dbImportacion.deleteAllEstructLinea);
+app.post('/api/importacion/orientacionautomatica', dbImportacion.orientacionautomatica);
+
 app.get("/api/importacion/downloadPlantillaSuministro", (req, res) => {
   let rutaarchivo = __dirname + ruta + '/plantillas/Cargar_Elemento.xlsx' ;
   console.log(rutaarchivo);
@@ -343,8 +337,12 @@ app.get("/api/importacion/downloadPlantillaRedes", (req, res) => {
   const file = path.resolve('', rutaarchivo);
   res.download(file);
 })
+
+/* Mapa*/
 app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
+app.post('/api/mapa/getdetalle', dbMapa.getdetalle);
+
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)

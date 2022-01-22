@@ -11,6 +11,7 @@ const get = (request, response) => {
     }
   
     pool.query('select  ' +
+      'p.c_codigo c_codigoestructura, ' +
       'p.n_idpl_estructura, ' +
       'p.c_latitud, ' +
       'p.c_longitud, ' +
@@ -26,6 +27,25 @@ const get = (request, response) => {
       'a.c_iconomapa is not null  ' +
       'and a.c_iconomapa<> \'\'',
       [request.body.n_idpl_linea, request.body.n_version]
+      , (error, results) => {
+        if (error) {
+          console.log(error);
+          response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos para el mapa!.", data: null })
+        } else {
+          response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+        }
+      })
+  }
+
+  const getdetalle = (request, response) => {
+    if (request.body.n_idpl_estructura == null) {
+      request.body.n_idpl_estructura == 0
+    }
+  
+    pool.query('select a.c_codigo,a.c_nombre, ea.n_cantidad, coalesce(ea.n_orientacion,0) n_orientacion from pl_armado a '+
+    'inner join pl_estructuraarmado ea on a.n_idpl_armado = ea.n_idpl_armado and ea.n_borrado = 0 '+
+    'where a.n_borrado = 0 and ea.n_idpl_estructura = $1',
+      [request.body.n_idpl_estructura]
       , (error, results) => {
         if (error) {
           console.log(error);
@@ -79,5 +99,6 @@ const getlineas = (request, response) => {
 
 module.exports = {
     get,
-    getlineas
+    getlineas,
+    getdetalle
 }
