@@ -17,6 +17,7 @@ const dbGeneral = require('./dal/general')
 const dbArmado = require('./dal/armado')
 const dbMetrado = require('./dal/metrado')
 const dbDashboard = require('./dal/dashboard')
+const dbFicha = require('./dal/ficha')
 
 const app = express()
 const port = 3200
@@ -356,3 +357,6 @@ app.post('/api/elemento/updateconfig', dbElemento.updateconfig)
 
 /* Dashboard */
 app.post('/api/dashboard/getLineas', dbDashboard.getLineas)
+
+/*Ficha */
+app.post('/api/ficha/get', dbFicha.get)
