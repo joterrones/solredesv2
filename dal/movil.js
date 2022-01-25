@@ -1,5 +1,5 @@
 
-const cnx = require('../common/settings');
+const cnx = require('../common/appsettings');
 const fs = require('fs');
 let pool = cnx.poolLocal;
 
