@@ -18,7 +18,7 @@ const dbArmado = require('./dal/armado')
 const dbMetrado = require('./dal/metrado')
 const dbDashboard = require('./dal/dashboard')
 const dbMovil = require('./dal/movil')
-
+const dbFicha = require('./dal/ficha')
 const app = express()
 const port = 3200
 
@@ -220,6 +220,9 @@ app.post('/api/AdmArchivos/uploadfile', function (req, res) {
     fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+archivo, 0744);
     fs.mkdirSync(dir, 0744);
   }
+  if(!fs.existsSync(dir)){
+    fs.mkdirSync(dir, 0744);
+  }
   req.query.c_ruta = dir;
   req.query.c_nombre = c_nombre;
   dir = dir + '' + c_nombre;
@@ -361,3 +364,6 @@ app.post('/api/elemento/updateconfig', dbElemento.updateconfig)
 
 /* Dashboard */
 app.post('/api/dashboard/getLineas', dbDashboard.getLineas)
+
+/*Ficha */
+app.post('/api/ficha/get', dbFicha.get)

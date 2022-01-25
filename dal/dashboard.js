@@ -10,8 +10,10 @@ const getLineas = (request, response) => {
        
         pool.query('select  pl.c_codigo, count(ple.c_nombre) as n_cantidad from pl_linea as pl '+
         'inner join  pl_estructura ple on ple.n_idpl_linea = pl.n_idpl_linea '+
-        'where pl.n_borrado = 0 and ple.n_borrado = 0 '+
+        'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona '+
+        'where pl.n_borrado = 0 and ple.n_borrado = 0 and pz.n_idpro_proyecto = $1 '+        
         'group by pl.c_codigo',
+        [request.body.n_idpro_proyecto],
         (error, results) => {
             if (error) {
                 console.log(error);
