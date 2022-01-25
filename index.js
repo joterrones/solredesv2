@@ -17,8 +17,8 @@ const dbGeneral = require('./dal/general')
 const dbArmado = require('./dal/armado')
 const dbMetrado = require('./dal/metrado')
 const dbDashboard = require('./dal/dashboard')
+const dbMovil = require('./dal/movil')
 const dbFicha = require('./dal/ficha')
-
 const app = express()
 const port = 3200
 
@@ -347,6 +347,12 @@ app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
 app.post('/api/mapa/getdetalle', dbMapa.getdetalle);
 
+/* Movil */
+app.get('/api/movil/getusuario', dbMovil.getusuario)
+app.get('/api/movil/getlinea', dbMovil.getlinea)
+app.get('/api/movil/getdato', dbMovil.getdato)
+app.post('/api/movil/guardardatos', dbMovil.guardardatos)
+app.post('/api/movil/guardarfoto', dbMovil.guardarfoto)
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
