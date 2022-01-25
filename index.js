@@ -56,6 +56,7 @@ app.use('/archivos', express.static(__dirname + ruta));
 app.post('/api/seguridad/login', dbSeguridad.login)
 app.post('/api/seguridad/get', dbSeguridad.get)
 app.post('/api/seguridad/getrole', dbSeguridad.getrole) 
+app.post('/api/seguridad/getRolUser', dbSeguridad.getRolUser)
 app.post('/api/seguridad/valDni', dbSeguridad.valDni)
 app.post('/api/seguridad/saveUser', dbSeguridad.saveUser)
 app.post('/api/seguridad/resetearclave', dbSeguridad.resetearclave)
