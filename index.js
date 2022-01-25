@@ -220,6 +220,9 @@ app.post('/api/AdmArchivos/uploadfile', function (req, res) {
     fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+archivo, 0744);
     fs.mkdirSync(dir, 0744);
   }
+  if(!fs.existsSync(dir)){
+    fs.mkdirSync(dir, 0744);
+  }
   req.query.c_ruta = dir;
   req.query.c_nombre = c_nombre;
   dir = dir + '' + c_nombre;
