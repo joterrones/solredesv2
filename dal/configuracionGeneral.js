@@ -731,9 +731,10 @@ const getProUser = (request, response)=>{
         
         let cadena = 'select us.n_idseg_userprofile as n_idseg_userprofileusu, us.c_username, gru.n_idtra_grupo, gru.n_idseg_userprofile, gru.b_activo from seg_userprofile us \n\r' +
             'left join tra_grupousuario gru on gru.n_idseg_userprofile = us.n_idseg_userprofile and  gru.n_idtra_grupo = $1 or (gru.n_idseg_userprofile = null)   \n\r' +        
+            'inner join pro_usuarioproyecto pro on pro.n_idseg_userprofile = us.n_idseg_userprofile and pro.n_idpro_proyecto = $2   \n\r' +        
             'where us.n_borrado = 0'
         pool.query(cadena,
-            [request.body.n_idtra_grupo],
+            [request.body.n_idtra_grupo,request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    

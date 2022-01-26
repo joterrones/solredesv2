@@ -7,13 +7,13 @@ const getLineas = (request, response) => {
     
     var obj = valida.validaToken(request)
     if(obj.estado){
-       
+       let n_idpro_proyecto = request.body.n_idpro_proyecto;
         pool.query('select  pl.c_codigo, count(ple.c_nombre) as n_cantidad from pl_linea as pl '+
         'inner join  pl_estructura ple on ple.n_idpl_linea = pl.n_idpl_linea '+
         'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona '+
         'where pl.n_borrado = 0 and ple.n_borrado = 0 and pz.n_idpro_proyecto = $1 '+        
         'group by pl.c_codigo',
-        [request.body.n_idpro_proyecto],
+        [n_idpro_proyecto],
         (error, results) => {
             if (error) {
                 console.log(error);
@@ -29,8 +29,9 @@ const getLineas = (request, response) => {
 
                 pool.query('select  plz.c_nombre, count(pl.c_codigo) as n_cantidad from pl_zona as plz '+
                 'inner join  pl_linea pl on pl.n_idpl_zona = plz.n_idpl_zona '+
-                'where plz.n_borrado = 0 and pl.n_borrado = 0 '+
+                'where plz.n_borrado = 0 and pl.n_borrado = 0 and plz.n_idpro_proyecto = $1 '+
                 'group by plz.c_nombre',
+                [n_idpro_proyecto],
                 (error, results) => {
                     if(error){
                         console.log(error);
@@ -43,12 +44,30 @@ const getLineas = (request, response) => {
                             zonas.push(element.c_nombre);
                             cantidadesdelineas.push(parseInt(element.n_cantidad));
                         });
-                        response.status(200).json({
-                            estado: true, mensaje: "", data: {
-                                graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras },
-                                graficozonas: { claves: zonas, cantidades: cantidadesdelineas },
+                        
+                        pool.query('select  pl.c_codigo, count(mon.n_idpl_linea) as n_cantidad from pl_linea as pl '+
+                        'inner join mon_inspeccion mon on mon.n_idpl_linea = pl.n_idpl_linea '+
+                        'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona  '+
+                        'where pl.n_borrado = 0 and mon.n_borrado = 0 and pz.n_idpro_proyecto = $1 '+
+                        'group by pl.c_codigo',[n_idpro_proyecto],
+                        (error, results) =>{
+                            if(error){
+                                console.log(error);
+                                response.status(200).json({ estado: false, mensaje: "DB: error datos. getLineas3" + error.stack, data: null })
+                            }else{
+                                let cantidades_de_mon = [];
+                                let datos = results.rows;
+                                datos.forEach(element => {                                    
+                                    cantidades_de_mon.push(parseInt(element.n_cantidad));
+                                });
+                                response.status(200).json({                            
+                                    estado: true, mensaje: "", data: {
+                                        graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras, cantidadesmon:cantidades_de_mon },
+                                        graficozonas: { claves: zonas, cantidades: cantidadesdelineas },
+                                    }
+                                })
                             }
-                        })
+                        })                        
                     }
                 });                
             }
