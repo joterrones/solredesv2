@@ -83,11 +83,13 @@ const getLinea = (request, response)=>{
         let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, l.n_idpl_tipolinea, l.n_idpl_zona,tp.c_nombre as c_nombret, zn.c_nombre as c_nombrez from pl_linea as l \n\r' +
             'left join pl_tipolinea tp on tp.n_idpl_tipolinea = l.n_idpl_tipolinea \n\r' +    
             'left join pl_zona zn on zn.n_idpl_zona = l.n_idpl_zona \n\r' +         
-            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2)'
+            'inner join pro_proyecto pro on pro.n_idpro_proyecto = zn.n_idpro_proyecto \n\r' +
+            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2) and (zn.n_idpro_proyecto = $3 or 0 = $3)'
         pool.query(cadena,
-            [request.body.n_idpl_tipolinea, request.body.n_idpl_zona],
+            [request.body.n_idpl_tipolinea, request.body.n_idpl_zona,request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
+                    console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
@@ -800,10 +802,13 @@ const getLineaUser = (request, response)=>{
     if (obj.estado) {
         
         let cadena = 'select al.n_idpl_linea as n_idpl_linealn, al.c_nombre, gru.n_idtra_grupo, gru.n_idpl_linea, gru.n_borrado from pl_linea al \n\r' +
+            'inner join pl_zona zn on zn.n_idpl_zona = al.n_idpl_zona \n\r' +
+            'inner join pro_proyecto pro on pro.n_idpro_proyecto = zn.n_idpro_proyecto \n\r' +
+            'inner join pl_tipolinea tp on tp.n_idpl_tipolinea = al.n_idpl_tipolinea \n\r' +
             'left join tra_grupolinea gru on gru.n_idpl_linea = al.n_idpl_linea and  gru.n_idtra_grupo = $1 or (gru.n_idpl_linea = null) \n\r' +        
-            'where al.n_borrado = 0'
+            'where al.n_borrado = 0 and (al.n_idpl_zona = $2 or 0 = $2) and (al.n_idpl_tipolinea = $3 or 0 = $3) and (zn.n_idpro_proyecto = $4) '
         pool.query(cadena,
-            [request.body.n_idtra_grupo],
+            [request.body.n_idtra_grupo, request.body.n_idpl_zona, request.body.n_idpl_tipolinea, request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
@@ -816,15 +821,29 @@ const getLineaUser = (request, response)=>{
     }
 }
 
-const resetLineaUser = (request, response) => {
+const noAsignarLineaUser = (request, response) => {
+    //QUITAR ASIGANCIÓN
     var obj = valida.validaToken(request)
-    if (obj.estado) {
-        let cadena = 'update tra_grupolinea set n_borrado = 1 \n\r' +     
-            'where n_idtra_grupo = $1'  
-        pool.query(cadena,[request.body.n_idtra_grupo],
+    console.log(request.body.n_idpl_linea);
+    console.log(request.body.n_idtra_grupo);
+    let n_idpl_linea = request.body.n_idpl_linea;
+    let n_idtra_grupo = request.body.n_idtra_grupo;
+    if (obj.estado) {        
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea ='+ n_idpl_linea +' and n_idtra_grupo = '+ n_idtra_grupo +')) then \n\r' +
+            '           update tra_grupolinea set n_borrado = 1	where n_idpl_linea ='+ n_idpl_linea +' and n_idtra_grupo = '+ n_idtra_grupo +'; \n\r' +
+            '       else \n\r' +
+            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
+            '           VALUES (default, '+ n_idpl_linea +', '+ n_idtra_grupo +', 0, 1, 1, now(), now()); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
             (error, results) => {
                 if (error) {
-                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
                 }
@@ -834,8 +853,8 @@ const resetLineaUser = (request, response) => {
     }
 }
 
-const saveLineaUser = (request, response)=>{
-    
+const asignarLineaUser = (request, response)=>{
+    //ASIGNAR
     var obj = valida.validaToken(request)
     console.log(request.body.n_idpl_linea);
     console.log(request.body.n_idtra_grupo);
@@ -1107,8 +1126,8 @@ module.exports = {
     resetProUser,
     saveProUser,
     getLineaUser,
-    resetLineaUser,
-    saveLineaUser,
+    noAsignarLineaUser,
+    asignarLineaUser,
     getTipoElemento,
     saveTipoElemento,
     deleteTipoElemento,

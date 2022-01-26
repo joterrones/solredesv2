@@ -261,11 +261,11 @@ const deleteEstructLinea = (request,response) =>{
 const deleteAllEstructLinea = (request,response) =>{
     let idversion = request.body.idversion;
     let n_id_usermodi = request.body.n_id_usermodi;
-    console.log(idversion);
-
+    let n_idpl_linea = request.body.n_idpl_linea;
+    
     var obj = valida.validaToken(request)
     if (obj.estado) { 
-        pool.query('update pl_estructura set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_version='+ idversion +' ',
+        pool.query('update pl_estructura set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_version='+ idversion +' and n_idpl_linea = '+ n_idpl_linea +'',
             (error, results) => {
                 if (error) {
                     console.log(error);

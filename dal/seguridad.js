@@ -142,6 +142,26 @@ const getrole = (request, response) => {
     }
 }
 
+const getRolUser = (request, response) => {
+    var obj = valida.validaToken(request);
+    console.log(request.body.n_idseg_userprofile);
+    if (obj.estado) {
+        let cadena = 'select us.c_username, rol.n_idseg_rol, rol.c_nombre from seg_userprofile us \n\r' +
+            'inner join seg_rol rol on rol.n_idseg_rol = us.n_idseg_rol \n\r' + 
+            'where us.n_idseg_userprofile = $1'  
+        pool.query(cadena,[request.body.n_idseg_userprofile],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error UserRol!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
 const saveRol = (request, response)=>{
     
     var obj = valida.validaToken(request)
@@ -412,6 +432,7 @@ module.exports = {
     login,
     get,
     getrole,
+    getRolUser,
     valDni,
     saveUser,
     resetearclave,
