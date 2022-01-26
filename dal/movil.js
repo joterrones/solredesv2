@@ -1,14 +1,14 @@
 
-const cnx = require('../common/settings');
+const cnx = require('../common/appsettings')
 const fs = require('fs');
-let pool = cnx.poolLocal;
-
+let pool = cnx.pool;
+const ruta = '/archivos';
 const guardarfoto = (request, response) => {
     try {
         let proyecto = request.query.proyecto;
         let base64Str = request.body.c_file.replace("\/", "/");
         var base64Data = base64Str.replace(/^data:image\/png;base64,/, "");
-        let dir = "D:/fotos/inspeccion/" + proyecto + "/";
+        let dir = __dirname.replace('\dal', '')+ruta+ "/inspeccion/";
         let patshort = request.body.c_nombre.substr(0, 2);
 
         dir = dir + patshort;
@@ -31,18 +31,29 @@ const guardarfoto = (request, response) => {
 }
 
 const guardardatos = async (request, response) => {
-    pool = cnx.dynamic_connection(request.query.proyecto);
+    console.log("request.body",request.body);
     let inspecciones = request.body.inspecciones;
+    console.log("inspecciones",inspecciones);
     let resultados = [];
     let cadena_inspeccion = '';
     let resultado;
-    await inspecciones.forEach(async element => {
+    inspecciones.forEach(async element => {
         try {
             let queryExisteInspeccion = await pool.query('Select n_idmon_inspeccion from mon_inspeccion where c_codigo = $1 and n_borrado=0', [element.c_codigo]);
             if (queryExisteInspeccion.rowCount == 0) {
+
+                if(!element.n_altitud){
+                    element.n_altitud = 0;
+                }
+
+                if(!element.n_precision){
+                    element.n_precision = 0;
+                }
+
                 cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_borrado,n_id_usercrea,d_fechacrea) values ' +
                     '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),0,' + element.n_id_usuario + ',now()) returning *';
-                let insertInspeccion = await pool.query(cadena_inspeccion);
+                    console.log("cadena_inspeccion",cadena_inspeccion);
+                    let insertInspeccion = await pool.query(cadena_inspeccion);
                 if (insertInspeccion.rowCount > 0) {
                     if (element.vanos.length > 0) {
                         let cadena_vano = 'insert into mon_inspeccionvano(n_idmon_inspeccionvano,c_codigoinicio,c_codigofin,n_borrado,n_id_usercrea,d_fechacrea) values ';
@@ -82,13 +93,19 @@ const guardardatos = async (request, response) => {
                         c_mensaje: "Registro guardado"
                     };
                 }
+
+                //borrar
+               /* resultado = {
+                    c_codigo: element.c_codigo,
+                    b_flag: true,
+                    c_mensaje: "Registro guardado"
+                };*/
             } else {
                 resultado = {
                     c_codigo: element.c_codigo,
                     b_flag: true,
                     c_mensaje: "El registro ya existe"
                 };
-                resultados.push(resultado);
             }
         } catch (error) {
             resultado = {
@@ -97,11 +114,12 @@ const guardardatos = async (request, response) => {
                 c_mensaje: "Ocurrio un error al insertar los datos de inspeccion!." + error.stack
             };
         }
+        resultados.push(resultado);
+        if (inspecciones.length <= resultados.length) {
+            response.status(200).json({inspecciones:resultados});
+        }
     });
-    resultados.push(resultado);
-    //if (inspecciones.length == resultados.length) {
-    response.status(200).json(resultados);
-    // }
+
 }
 
 
@@ -116,104 +134,62 @@ const getusuario = (request, response) => {
     })
 }
 
-const getlinea = (request, response) => {
-    lineas = [];
-    tipoarmados = [];
-    armados = [];
-    fotos = [];
-    observaciones = [];
+const getlinea = async (request, response) => {
 
-    pool.query('Select l.n_idpl_linea, l.c_codigo, l.c_nombre, l.n_idpl_tipolinea, l.n_idpl_zona,false b_flag from pl_linea l ' +
-        'inner join rep_usuariolinea ul on l.n_idpl_linea=ul.n_idpl_linea and ul.n_borrado = 0 ' +
+    let queryLinea = await pool.query('Select l.n_idpl_linea, l.c_codigo, l.c_nombre, l.n_idpl_tipolinea, l.n_idpl_zona,false b_flag from pl_linea l ' +
+        'inner join tra_grupolinea gl on l.n_idpl_linea=gl.n_idpl_linea and gl.n_borrado = 0 ' +
+        'inner join tra_grupousuario gu on gl.n_idtra_grupo=gu.n_idtra_grupo and gu.n_borrado = 0 ' +
         'where l.n_borrado = 0 ' +
-        'and ul.n_idseg_userprofile = $1', [request.query.n_idseg_userprofile], (error, results) => {
-            if (error) {
-                response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la linea!." + error.stack, data: null })
-            } else {
-                lineas = results.rows;
-                pool.query('select n_idpl_tipoarmado,c_codigo,c_nombre, coalesce(b_angulo,false) b_angulo, coalesce(n_orden,0) n_orden from pl_tipoarmado ta ' +
-                    'where n_borrado = 0 ' +
-                    'and b_movil = true', (error, results) => {
-                        if (error) {
-                            response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la linea!." + error.stack, data: null })
-                        } else {
-                            tipoarmados = results.rows;
-                            pool.query('Select n_idpl_armado,n_idpl_tipoarmado,c_codigo,c_nombre, coalesce(c_iconomapa,\'\') c_iconomapa from pl_armado a ' +
-                                'where a.n_borrado = 0 and n_version = 4', (error, results) => {
-                                    if (error) {
-                                        response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la linea!." + error.stack, data: null })
-                                    } else {
-                                        armados = results.rows;
-                                        pool.query('select n_idgen_tipofoto,c_codigo,c_nombre,n_tipo,coalesce(b_foto, false)b_foto,coalesce(b_requerido,false)b_requerido from gen_tipofoto ' +
-                                            'where n_tipo=10', (error, results) => {
-                                                if (error) {
-                                                    response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la linea!." + error.stack, data: null })
-                                                } else {
-                                                    fotos = results.rows;
-                                                    pool.query('select n_idgen_observacion,c_codigo,c_descripcion,n_idpl_tipoarmado from gen_observacion ' +
-                                                        'where n_borrado = 0', (error, results) => {
-                                                            if (error) {
-                                                                response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la linea!." + error.stack, data: null })
-                                                            } else {
-                                                                observaciones = results.rows;
-                                                                response.status(200).json({ lineas: lineas, tipoarmados: tipoarmados, armados: armados, fotos: fotos, observaciones: observaciones })
-                                                            }
-                                                        })
-                                                }
-                                            })
+        'and gu.n_idseg_userprofile = $1', [request.query.n_idseg_userprofile]);
 
-                                    }
-                                })
-                        }
-                    })
-            }
-        })
+    let queryTipoArmado = await pool.query('select n_idpl_tipoarmado,c_codigo,c_nombre, coalesce(b_angulo,false) b_angulo, coalesce(n_orden,0) n_orden from pl_tipoarmado ta ' +
+        'where n_borrado = 0 ' +
+        'and b_movil = true');
+
+    let queryArmado = await pool.query('Select n_idpl_armado,n_idpl_tipoarmado,c_codigo,c_nombre, coalesce(c_iconomapa,\'\') c_iconomapa from pl_armado a ' +
+        'where a.n_borrado = 0 and n_version = 4');
+
+    let queryTipoFoto = await pool.query('select n_idgen_tipofoto,c_codigo,c_nombre,n_tipo,coalesce(b_foto, false)b_foto,coalesce(b_requerido,false)b_requerido from gen_tipofoto ' +
+        'where n_tipo=10');
+
+    let queryObservacion = await pool.query('select n_idgen_observacion,c_codigo,c_descripcion,n_idpl_tipoarmado from gen_observacion ' +
+        'where n_borrado = 0');
+
+    response.status(200).json({ lineas: queryLinea.rows, tipoarmados: queryTipoArmado.rows, armados: queryArmado.rows, fotos: queryTipoFoto.rows, observaciones: queryObservacion.rows })
 }
 
-const getdato = (request, response) => {
-    let estructuras = [];
-    let subtramos = [];
-    let estructurasdetalle = [];
-    pool.query('Select distinct p.n_idpl_Estructura,p.n_idpl_linea,p.c_codigoestructura c_codigo, p.c_codigoestructura c_nombre,p.c_latitud,p.c_longitud,p.c_etiquetaestructura c_etiqueta,p.c_codigonodo,p.c_codigotipolinea from vw_planos p ' +
-        'inner join rep_usuariolinea ul on p.n_idpl_linea=ul.n_idpl_linea and ul.n_borrado = 0 ' +
-        'where ul.n_idseg_userprofile = $1 ' +
-        'and p.n_idpl_linea = $2 ' +
-        'and p.n_version = (Select max(n_version) from pl_Estructura where n_version < 20)', [request.query.n_id_usuario, request.query.n_idpl_linea], (error, results) => {
-            if (error) {
-                response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la  estructura!." + error.stack, data: null })
-            } else {
-                estructuras = results.rows;
-                pool.query('Select distinct st.n_idpl_estructurainicio,st.n_idpl_estructurafin,st.c_etiqueta,p.n_idpl_tipolinea,p.n_idpl_linea,p.c_codigotipolinea from vw_planos p ' +
-                    'inner join pl_subtramo st on p.n_idpl_estructura = st.n_idpl_estructurainicio and st.n_borrado = 0 ' +
-                    'inner join rep_usuariolinea ul on p.n_idpl_linea=ul.n_idpl_linea and ul.n_borrado = 0 ' +
-                    'where ul.n_idseg_userprofile = $1 ' +
-                    'and p.n_idpl_linea = $2 ' +
-                    'and p.n_version = (Select max(n_version) from pl_Estructura where n_version < 20)', [request.query.n_id_usuario, request.query.n_idpl_linea], (error, results) => {
-                        if (error) {
-                            response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la  subtramo!." + error.stack, data: null })
-                        } else {
-                            subtramos = results.rows;
-                            pool.query('Select distinct p.n_idpl_estructura,a.n_idpl_armado,a.c_codigo c_codigoarmado,a.c_iconomapa, coalesce(ea.n_orientacion,0) n_orientacion,p.n_idpl_linea, ta.c_codigo c_codigotipoarmado, ea.n_cantidad from vw_planos p ' +
-                                'inner join pl_estructuraarmado ea on p.n_idpl_estructura = ea.n_idpl_estructura and ea.n_borrado = 0 ' +
-                                'inner join pl_armado a on ea.n_idpl_armado = a.n_idpl_armado and a.n_borrado = 0 ' +
-                                'inner join pl_tipoarmado ta on a.n_idpl_tipoarmado = ta.n_idpl_tipoarmado and ta.n_borrado = 0 ' +
-                                'inner join rep_usuariolinea ul on p.n_idpl_linea=ul.n_idpl_linea and ul.n_borrado = 0 ' +
-                                'where ul.n_idseg_userprofile = $1 ' +
-                                'and p.n_idpl_linea = $2 ' +
-                                'and p.n_version = (Select max(n_version) from pl_Estructura where n_version < 20) ' +
-                                'and (a.c_iconomapa is not null or a.c_iconomapa !=\'-\' or a.c_iconomapa !=\'\')', [request.query.n_id_usuario, request.query.n_idpl_linea], (error, results) => {
-                                    if (error) {
-                                        response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos de la  subtramo!." + error.stack, data: null })
-                                    } else {
-                                        estructurasdetalle = results.rows;
+const getdato = async (request, response) => {
 
-                                        response.status(200).json({ estructuras: estructuras, subtramos: subtramos, estructuradetalles: estructurasdetalle })
-                                    }
-                                })
-                        }
-                    })
-            }
-        })
+    let queryEstructura = await pool.query('Select distinct p.n_idpl_Estructura,p.n_idpl_linea,p.c_codigoestructura c_codigo, p.c_codigoestructura c_nombre,p.c_latitud,p.c_longitud,p.c_etiquetaestructura c_etiqueta,p.c_codigonodo,p.c_codigotipolinea from vw_planos p ' +
+        'inner join tra_grupolinea gl on p.n_idpl_linea=gl.n_idpl_linea and gl.n_borrado = 0 ' +
+        'inner join tra_grupousuario gu on gl.n_idtra_grupo=gu.n_idtra_grupo and gu.n_borrado = 0 ' +
+        'where gu.n_idseg_userprofile = $1 ' +
+        'and p.n_idpl_linea = $2 ' +
+        'and p.n_version = (Select max(n_version) from pl_Estructura where n_idpl_linea = $2) ' +
+        'and p.n_version is not null', [request.query.n_id_usuario, request.query.n_idpl_linea]);
+
+    let querySubtramo = await pool.query('Select distinct st.n_idpl_estructurainicio,st.n_idpl_estructurafin,st.c_etiqueta,p.n_idpl_tipolinea,p.n_idpl_linea,p.c_codigotipolinea from vw_planos p  ' +
+        'inner join pl_subtramo st on p.n_idpl_estructura = st.n_idpl_estructurainicio and st.n_borrado = 0  ' +
+        'inner join tra_grupolinea gl on p.n_idpl_linea=gl.n_idpl_linea and gl.n_borrado = 0  ' +
+        'inner join tra_grupousuario gu on gl.n_idtra_grupo=gu.n_idtra_grupo and gu.n_borrado = 0  ' +
+        'where gu.n_idseg_userprofile = $1   ' +
+        'and p.n_idpl_linea = $2   ' +
+        'and p.n_version = (Select max(n_version) from pl_Estructura where n_idpl_linea = $2)  ' +
+        'and p.n_version is not null', [request.query.n_id_usuario, request.query.n_idpl_linea]);
+
+    let estructuraDetalle = await pool.query('Select distinct p.n_idpl_estructura,a.n_idpl_armado,a.c_codigo c_codigoarmado,a.c_iconomapa, coalesce(ea.n_orientacion,0) n_orientacion,p.n_idpl_linea, ta.c_codigo c_codigotipoarmado, ea.n_cantidad from vw_planos p ' +
+        'inner join pl_estructuraarmado ea on p.n_idpl_estructura = ea.n_idpl_estructura and ea.n_borrado = 0 ' +
+        'inner join pl_armado a on ea.n_idpl_armado = a.n_idpl_armado and a.n_borrado = 0 ' +
+        'inner join pl_tipoarmado ta on a.n_idpl_tipoarmado = ta.n_idpl_tipoarmado and ta.n_borrado = 0 ' +
+        'inner join tra_grupolinea gl on p.n_idpl_linea=gl.n_idpl_linea and gl.n_borrado = 0 ' +
+        'inner join tra_grupousuario gu on gl.n_idtra_grupo=gu.n_idtra_grupo and gu.n_borrado = 0 ' +
+        'where gu.n_idseg_userprofile = $1 ' +
+        'and p.n_idpl_linea = $2 ' +
+        'and p.n_version = (Select max(n_version) from pl_Estructura where n_idpl_linea = $2) ' +
+        'and (a.c_iconomapa is not null or a.c_iconomapa !=\'-\' or a.c_iconomapa !=\'\') ' +
+        'and p.n_version is not null', [request.query.n_id_usuario, request.query.n_idpl_linea]);
+
+    response.status(200).json({ estructuras: queryEstructura.rows, subtramos: querySubtramo.rows, estructuradetalles: estructuraDetalle.rows });
 
 }
 
