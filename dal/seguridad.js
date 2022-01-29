@@ -176,7 +176,7 @@ const saveRol = (request, response)=>{
             '       if(exists(select n_idseg_rol from seg_rol where n_idseg_rol =\'' + n_idseg_rol + '\')) then \n\r' +
             '           update seg_rol set c_nombre= \'' + c_nombre + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_rol = \''+n_idseg_rol+'\' ; \n\r' +
             '       else \n\r' +
-            '           insert into seg_rol(n_idseg_rol, c_nombre, n_nivel,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           insert into seg_rol(n_idseg_rol, c_nombre,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
             '           values (default,\'' + c_nombre + '\',0 ,now(), '+n_id_usermodi+'); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +

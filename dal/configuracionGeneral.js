@@ -242,8 +242,8 @@ const getZonas = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         pool.query('Select n_idpl_zona, c_codigo, c_nombre, n_idpro_proyecto from pl_zona \n\r' +       
-        'where n_borrado = 0 and (n_idpl_zona = $1 or 0 = $1)'
-        ,[request.body.n_idpl_tipolinea],
+        'where n_borrado = 0 and (n_idpl_zona = $1 or 0 = $1) and (n_idpro_proyecto = $2 or 0 = $2)'
+        ,[request.body.n_idpl_tipolinea,request.body.n_idpro_proyecto],
             (error, results) => {
                 
                 if (error) {

@@ -9,6 +9,7 @@ const insertlinea = async (request, response) => {
         let i = 0;
         let resultados = [];
         let estructuras = request.body.estructuras;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
         estructuras.forEach(async element => {
             try {
                 var cadena = 'select id,c_mensaje, b_flag,n_flag from fn_node_insert_planilla_linea( \'' +
@@ -16,7 +17,7 @@ const insertlinea = async (request, response) => {
                     element.CODIGO_LINEA + '\',\'' +
                     element.TIPO_LINEA + '\',\'' +
                     element.ZONA + '\'' +
-                    ')';
+                    ','+ n_idpro_proyecto +')';
                 let queryImportacion = await pool.query(cadena);
 
                 if (queryImportacion.rowCount > 0) {
@@ -24,7 +25,7 @@ const insertlinea = async (request, response) => {
                     element.c_mensaje = queryImportacion.rows[0].c_mensaje
                     resultados.push(element);
                     if (!queryImportacion.rows[0].b_flag) {
-                        console.log("insertlinea cadena", cadena);
+                        //console.log("insertlinea cadena", cadena);
                     }
                 }
             } catch (error) {
@@ -261,11 +262,14 @@ const deleteEstructLinea = (request,response) =>{
 const deleteAllEstructLinea = (request,response) =>{
     let idversion = request.body.idversion;
     let n_id_usermodi = request.body.n_id_usermodi;
-    let n_idpl_linea = request.body.n_idpl_linea;
+    let array_idpl_linea = request.body.array_idpl_linea;
     
+    let n_idpl_linea = array_idpl_linea.toString();
+    console.log(n_idpl_linea);
+
     var obj = valida.validaToken(request)
     if (obj.estado) { 
-        pool.query('update pl_estructura set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_version='+ idversion +' and n_idpl_linea = '+ n_idpl_linea +'',
+        pool.query('update pl_estructura set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_version='+ idversion +' and n_idpl_linea in ('+ n_idpl_linea +')',
             (error, results) => {
                 if (error) {
                     console.log(error);

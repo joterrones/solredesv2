@@ -60,10 +60,54 @@ const getLineas = (request, response) => {
                                 datos.forEach(element => {                                    
                                     cantidades_de_mon.push(parseInt(element.n_cantidad));
                                 });
-                                response.status(200).json({                            
-                                    estado: true, mensaje: "", data: {
-                                        graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras, cantidadesmon:cantidades_de_mon },
-                                        graficozonas: { claves: zonas, cantidades: cantidadesdelineas },
+                                let formato="YYYY-TMMonth";
+                                pool.query('select to_char(d_fechacrea, \' '+ formato +'\') as fecha, count(d_fechacrea) as cantidad from mon_inspeccion  '+                               
+                                'group by fecha order by fecha asc',
+                                (error, results) =>{
+                                    if(error){
+                                        console.log(error);
+                                        response.status(200).json({ estado: false, mensaje: "DB: error datos. getLineas4" + error.stack, data: null })
+                                    }else{
+
+                                        let fechas = [];
+                                        let cantidadesregistro = [];
+                                        let datos = results.rows;
+                                        datos.forEach(element => {
+                                            fechas.push(element.fecha);
+                                            cantidadesregistro.push(parseInt(element.cantidad));
+                                        });
+
+                                        pool.query('select zn.c_nombre as nombrezona, count(mon.n_idpl_linea) as cantidad from mon_inspeccion as mon '+
+                                        'inner join pl_linea pl on pl.n_idpl_linea = mon.n_idpl_linea and pl.n_borrado = 0 '+
+                                        'inner join pl_zona zn on zn.n_idpl_zona = pl.n_idpl_zona and zn.n_borrado = 0  '+
+                                        'where zn.n_idpro_proyecto = $1 '+
+                                        'group by zn.c_nombre',[request.body.n_idpro_proyecto],
+                                        (error, result)=>{
+                                            if(error){
+                                                console.log(error);
+                                                response.status(200).json({ estado: false, mensaje: "DB: error datos. getLineas5" + error.stack, data: null })
+                                            }else{
+
+                                                let nomZona = [];
+                                                let cantidadZona = [];
+
+                                                let datos = result.rows
+                                                
+                                                datos.forEach(element => {
+                                                    nomZona.push(element.nombrezona);
+                                                    cantidadZona.push(parseInt(element.cantidad));
+                                                });
+                                                
+                                                response.status(200).json({                            
+                                                    estado: true, mensaje: "", data: {
+                                                        graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras, cantidadesmon:cantidades_de_mon},
+                                                        graficozonas: { claves: zonas, cantidades: cantidadesdelineas},
+                                                        graficoperiodo: { claves: fechas, cantidades: cantidadesregistro},
+                                                        graficozon: { claves: nomZona, cantidades: cantidadZona}
+                                                    }
+                                                })
+                                            }
+                                        })
                                     }
                                 })
                             }
