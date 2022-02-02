@@ -315,7 +315,8 @@ app.post('/api/importacion/insertSuministro', dbImportacion.insertSuministro);
 app.post('/api/importacion/insertMontaje', dbImportacion.insertMontaje); 
 app.post('/api/importacion/deleteEstructLinea', dbImportacion.deleteEstructLinea); 
 app.post('/api/importacion/deleteAllEstructLinea', dbImportacion.deleteAllEstructLinea);
-app.post('/api/importacion/orientacionautomatica', dbImportacion.orientacionautomatica);
+app.post('/api/importacion/orientacionautomatica', dbImportacion.orientacionautomatica); 
+app.post('/api/importacion/gettipolinea', dbImportacion.gettipolinea);
 
 app.get("/api/importacion/downloadPlantillaSuministro", (req, res) => {
   let rutaarchivo = __dirname + ruta + '/plantillas/Cargar_Elemento.xlsx' ;
@@ -336,9 +337,11 @@ app.get("/api/importacion/downloadPlantillaLinea", (req, res) => {
   res.download(file);
 })
 app.get("/api/importacion/downloadPlantillaRedes", (req, res) => {
-  let rutaarchivo = __dirname + ruta + '/plantillas/Carga_Redes.xlsx';
+  let rutaarchivo = __dirname + ruta + '/plantillas/Carga_Redes.xlsx'; 
+  
   console.log(rutaarchivo);
   const file = path.resolve('', rutaarchivo);
+  
   res.download(file);
 })
 

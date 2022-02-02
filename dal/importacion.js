@@ -303,6 +303,26 @@ const orientacionautomatica = (request,response) =>{
     }
 }
 
+const gettipolinea = (request,response) =>{
+    let idversion = request.body.idversion;
+    console.log(idversion);
+
+    var obj = valida.validaToken(request)
+    if (obj.estado) { 
+        pool.query('select c_nombre as c_nombretl from pl_tipolinea where n_borrado = 0',
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
 
 module.exports = {
     insertplanilla,
@@ -312,5 +332,6 @@ module.exports = {
     insertMontaje,
     deleteEstructLinea,
     deleteAllEstructLinea,
-    orientacionautomatica
+    orientacionautomatica,
+    gettipolinea
 }
