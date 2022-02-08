@@ -14,9 +14,9 @@ const get = (request, response) => {
       request.body.n_version=0;
     }
   
-    pool.query('SELECT a.n_idpl_armado,a.c_codigo,a.c_nombre,c_codigo_corto,a.c_iconomapa,c_rutaimg,a.n_idpl_tipoarmado,a.b_especial,a.n_version, ta.c_codigo c_codigotipoarmado FROM pl_armado a '+
+    pool.query('SELECT a.n_idpl_armado,a.c_codigo,a.c_nombre,c_codigo_corto,a.c_iconomapa,c_rutaimg,a.n_idpl_tipoarmado,a.b_especial,a.n_version, ta.c_codigo c_codigotipoarmado,a.n_idpro_proyecto,a.c_nombrelamina FROM pl_armado a '+
     'inner join pl_tipoarmado ta on a.n_idpl_tipoarmado = ta.n_idpl_tipoarmado and ta.n_borrado = 0 '+
-    'where a.n_borrado = 0 and (a.n_idpl_tipoarmado=$1 or 0=$1) and (a.n_version=$2 or 0=$2) ORDER BY a.n_idpl_armado ASC', 
+    'where a.n_borrado = 0 and (a.n_idpl_tipoarmado=$1 or 0=$1) and (a.n_version=$2 or 0=$2)', 
     [request.body.n_idpl_tipoarmado,request.body.n_version],(error, results) => {
       if (error) {
         response.status(200).json({estado:false,mensaje:"ocurrio un error al traer los datos del armado!.",data:null})
@@ -34,17 +34,19 @@ const get = (request, response) => {
     let c_codigo_corto = request.body.c_codigo_corto;
     let c_iconomapa = request.body.c_iconomapa;
     let c_rutaimg = request.body.c_rutaimg;
+    let c_nombrelamina = request.body.c_nombrelamina;
+    let n_idpro_proyecto = request.body.n_idpro_proyecto;
     let n_idpl_tipoarmado = request.body.n_idpl_tipoarmado;
     let n_version = request.body.n_version;
 
     let cadena = 'do $$ \n\r' +
     '   begin \n\r' +
     '       if(exists(select n_idpl_armado from pl_armado where n_borrado = 0 and n_idpl_armado ='+ n_idpl_armado +')) then \n\r' +
-    '           update pl_armado set c_codigo= \'' + c_codigo + '\', c_nombre=\''+ c_nombre +'\', c_codigo_corto=\''+ c_codigo_corto +'\', c_iconomapa=\''+ c_iconomapa +'\', c_rutaimg=\''+ c_rutaimg +'\', n_idpl_tipoarmado='+n_idpl_tipoarmado+', n_version='+ n_version +' \n\r' +
+    '           update pl_armado set c_codigo= \'' + c_codigo + '\', c_nombre=\''+ c_nombre +'\', c_codigo_corto=\''+ c_codigo_corto +'\', c_iconomapa=\''+ c_iconomapa +'\', c_rutaimg=\''+ c_rutaimg +'\', n_idpl_tipoarmado='+n_idpl_tipoarmado+', n_version='+ n_version +', c_nombrelamina=\''+ c_nombrelamina +'\' \n\r' +
     '                  where n_idpl_armado =\'' + n_idpl_armado + '\'; \n\r' +
     '       else \n\r' +
-    '           INSERT INTO pl_armado (n_idpl_armado,c_codigo,c_nombre,c_codigo_corto,c_iconomapa,c_rutaimg,n_idpl_tipoarmado,n_version,n_borrado,d_fechacrea, n_id_usercrea)\n\r' +
-    '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\',\''+ c_codigo_corto +'\', \''+ c_iconomapa+'\',\''+ c_rutaimg +'\','+ n_idpl_tipoarmado +',\''+ n_version +'\', 0, now(), 1);\n\r' +
+    '           INSERT INTO pl_armado (n_idpl_armado,c_codigo,c_nombre,c_codigo_corto,c_iconomapa,c_rutaimg,c_nombrelamina,n_idpl_tipoarmado,n_version,n_borrado,d_fechacrea, n_id_usercrea)\n\r' +
+    '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\',\''+ c_codigo_corto +'\', \''+ c_iconomapa+'\',\''+ c_rutaimg +'\',\''+ c_nombrelamina +'\','+ n_idpl_tipoarmado +',\''+ n_version +'\', 0, now(), 1);\n\r' +
     '       end if; \n\r' +
     '   end \n\r' +
     '$$';

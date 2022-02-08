@@ -97,8 +97,27 @@ const getlineas = (request, response) => {
       })
   }
 
+const getestructura = (request, response) => {
+  if (request.body.n_idpl_estructura == null) {
+    request.body.n_idpl_estructura == 0
+  }
+
+  pool.query('select c_nombre, c_codigo from pl_estructura  '+
+  'where n_idpl_estructura = $1 and n_borrado = 0',
+    [request.body.n_idpl_estructura]
+    , (error, results) => {
+      if (error) {
+        console.log(error);
+        response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos para el mapa!.", data: null })
+      } else {
+        response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+      }
+    })
+}
+
 module.exports = {
     get,
     getlineas,
-    getdetalle
+    getdetalle,
+    getestructura
 }

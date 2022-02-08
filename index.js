@@ -230,6 +230,7 @@ app.post('/api/AdmArchivos/uploadfile', function (req, res) {
 
   upload(req, res, function (err) {
     if (err) {
+      console.log(err);
       res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
     } else {  
       checksum.file(dir, function (err, sum) {        
@@ -269,6 +270,40 @@ app.post('/api/armado/getconfigarmado', dbArmado.getconfigarmado)
 app.post('/api/armado/insertconfigarmado', dbArmado.insertconfigarmado)
 app.post('/api/armado/getconfigtipomontaje', dbArmado.getconfigtipomontaje)
 app.post('/api/armado/insertarmadoconfigmontaje', dbArmado.insertarmadoconfigmontaje) 
+app.post('/api/armado/uploadfile', function (req, res) {
+  let archivo = req.query.archivo;
+  let rutaCorta =  archivo+"/Documentos/";
+  let dir = __dirname.replace('\dal', '') + ruta+"/"+rutaCorta;
+  let c_nombre = req.query.extension;
+
+  if (!fs.existsSync(dir)) {    
+    fs.mkdirSync(dir, 0744);
+  }
+  
+  req.query.c_ruta = dir;
+  req.query.c_nombre = c_nombre;
+  dir = dir + c_nombre;
+
+  console.log("Ruta",dir);
+  console.log("nombre",c_nombre);
+  upload(req, res, function (err) {
+    if (err) {
+      res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
+    } else {
+      checksum.file(dir, function (err, sum) {        
+        console.log("Ruta check: ",dir);
+        console.log(sum);
+        nuevoNombreArchivo = __dirname.replace('\dal', '')+ruta+"/"+rutaCorta+sum+path.extname(c_nombre);
+        fs.rename(dir, nuevoNombreArchivo, function(err) {
+          if ( err ) console.log('ERROR: ' + err);
+        });
+        newRuta = rutaCorta+sum+path.extname(c_nombre);
+        res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: newRuta, c_nombre: c_nombre, c_checksum: sum+path.extname(c_nombre) });
+        console.log("ERror",err)
+      })
+    }
+  });
+})
 
 /* Metrado */
 app.post('/api/metrado/get', dbMetrado.get)
@@ -348,7 +383,8 @@ app.get("/api/importacion/downloadPlantillaRedes", (req, res) => {
 /* Mapa*/
 app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
-app.post('/api/mapa/getdetalle', dbMapa.getdetalle);
+app.post('/api/mapa/getdetalle', dbMapa.getdetalle); 
+app.post('/api/mapa/getestructura', dbMapa.getestructura);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)
