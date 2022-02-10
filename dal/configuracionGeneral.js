@@ -333,7 +333,7 @@ const saveProyecto = (request, response) =>{
         let c_nombre = request.body.c_nombre;    
         let c_detalle = request.body.c_detalle;           
         let n_id_usermodi = request.body.n_id_usermodi;
-
+        console.log(c_detalle);
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idpro_proyecto from pro_proyecto where n_idpro_proyecto =\'' + n_idpro_proyecto + '\')) then \n\r' +
@@ -546,7 +546,7 @@ const saveTipoEmpresa = (request, response) =>{
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idgen_tipoempresa from gen_tipoempresa where n_idgen_tipoempresa =\'' + n_idgen_tipoempresa + '\')) then \n\r' +
-            '           update gen_tipoempresa set c_nombre= \'' + c_nombre + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idgen_tipoempresa = \''+n_idgen_tipoempresa+'\' ; \n\r' +
+            '           update gen_tipoempresa set c_nombre= \'' + c_nombre + '\', n_is_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idgen_tipoempresa = \''+n_idgen_tipoempresa+'\' ; \n\r' +
             '       else \n\r' +
             '           insert into gen_tipoempresa(n_idgen_tipoempresa, c_nombre, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
             '           values (default,\'' + c_nombre + '\', 0, now(), '+n_id_usermodi+'); \n\r' +
@@ -891,7 +891,8 @@ const getTipoElemento = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         
-        pool.query('select n_idpl_tipoelemento, c_nombre, c_codigo from pl_tipoelemento where n_borrado = 0',        
+        pool.query('select n_idpl_tipoelemento, c_nombre, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2 from pl_tipoelemento  '+ 
+                    'where n_borrado = 0 order by div asc, div2 asc',        
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -959,7 +960,8 @@ const getTipoMontaje = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         
-        pool.query('select n_idmon_categoriatipomontaje, c_nombre, c_codigo from mon_categoriatipomontaje where n_borrado = 0',        
+        pool.query('select n_idmon_categoriatipomontaje, c_nombre, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2 from mon_categoriatipomontaje '+
+                ' where n_borrado = 0	order by div asc, div2 asc',        
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })

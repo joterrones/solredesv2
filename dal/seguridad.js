@@ -14,13 +14,19 @@ const login = (request, response) => {
                 response.status(200).json({ estado: false, mensaje: "error: usuario o contraseña inválidos!.", data: null })
             } else {
                 if (results.rowCount > 0) {
-                    var tokenData = {
-                        username: request.body.c_username
+                    console.log("estado",results.rows[0].b_activo);
+                    if(results.rows[0].b_activo){
+                        var tokenData = {
+                            username: request.body.c_username
+                        }
+                        var token = jwt.sign(tokenData, 'Secret Password', {
+                            expiresIn: 60 * 60 * 4 // expires in 4 hours
+                        })
+                        response.status(200).json({ estado: true, mensaje: "", data: results.rows[0], token: token })
+                    }else{
+                        response.status(200).json({ estado: false, mensaje: "DB: Usuario no Activo", data: null })
                     }
-                    var token = jwt.sign(tokenData, 'Secret Password', {
-                        expiresIn: 60 * 60 * 4 // expires in 4 hours
-                    })
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows[0], token: token })
+                    
                 } else {
                     response.status(200).json({ estado: false, mensaje: "DB:usuario o contraseña inválidos!.", data: null })
                 }
@@ -31,9 +37,10 @@ const login = (request, response) => {
 const get = (request, response) => {
     var obj = valida.validaToken(request)    
     if (obj.estado) {
-        let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u  \n\r' +
+        let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, u.b_activo,r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u  \n\r' +
             'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol \n\r' +            
-            'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1)'
+            'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1) ' +
+            'order by r.c_nombre asc'
         pool.query(cadena,
             [request.body.n_idseg_rol],
             (error, results) => {
@@ -86,8 +93,8 @@ const saveUser = (request, response) => {
             '       if(exists(select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and n_idseg_userprofile =\'' + n_idseg_userprofile + '\')) then \n\r' +
             '           update seg_userprofile set c_nombre1= \'' + c_nombre1 + '\',c_nombre2= \'' + c_nombre2 + '\', c_appaterno=\'' + c_appaterno + '\', c_apmaterno=\'' + c_apmaterno + '\', c_dni=\'' + c_dni + '\', n_idseg_rol=' + n_idseg_rol +',c_username=\'' + c_username + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_userprofile =\'' + n_idseg_userprofile + '\'; \n\r' +
             '       else \n\r' +
-            '           insert into seg_userprofile(n_idseg_userprofile,c_username,c_clave,c_nombre1,c_nombre2,c_appaterno,c_apmaterno,c_dni,n_idseg_rol,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_username + '\',\'' + c_clave + '\',\'' + c_nombre1 + '\',\'' + c_nombre2 + '\',\'' + c_appaterno + '\',\'' + c_apmaterno + '\',\'' + c_dni + '\', '+ n_idseg_rol +', 0,now(),'+n_id_usermodi+'); \n\r' +
+            '           insert into seg_userprofile(n_idseg_userprofile,c_username,c_clave,c_nombre1,c_nombre2,c_appaterno,c_apmaterno,c_dni,b_activo,n_idseg_rol,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_username + '\',\'' + c_clave + '\',\'' + c_nombre1 + '\',\'' + c_nombre2 + '\',\'' + c_appaterno + '\',\'' + c_apmaterno + '\',\'' + c_dni + '\',true, '+ n_idseg_rol +', 0,now(),'+n_id_usermodi+'); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -113,6 +120,27 @@ const delete_usuario = (request, response) => {
         let n_id_usermodi = request.body.n_id_usermodi;
         console.log(n_idseg_userprofile)
         pool.query('update seg_userprofile set n_borrado = 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now()  where n_idseg_userprofile ='+n_idseg_userprofile+' ',             
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error4!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const estadoUser = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idseg_userprofile = request.body.n_idseg_userprofile;
+        let n_id_usermodi = request.body.n_id_usermodi;
+        let b_activo = request.body.b_activo;
+        console.log(n_idseg_userprofile)
+        pool.query('update seg_userprofile set b_activo = \''+ b_activo +'\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now()  where n_idseg_userprofile ='+n_idseg_userprofile+' ',             
             (error, results) => {
                 if (error) {
                     console.log(error);
@@ -200,15 +228,30 @@ const deleteRol=(request, response)=>{
     if (obj.estado) {
         let n_idseg_rol = request.body.n_idseg_rol;
         let n_id_usermodi = request.body.n_id_usermodi;
+        let c_nombre = request.body.c_nombre;
         console.log(n_idseg_rol)
 
-        pool.query('update seg_rol set n_borrado = 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_rol ='+n_idseg_rol+' ',          
+        pool.query('select u.c_username,u.n_idseg_rol, r.c_nombre from seg_userprofile u ' +
+                    'inner join seg_rol r on  r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0 '+
+                    'where u.n_borrado = 0 and u.b_activo = true and r.n_idseg_rol = '+n_idseg_rol+' ',          
             (error, results) => {
                 if (error) {
                     console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error4!.", data: null })
+                    response.status(200).json({ estado: false, mensaje: "DB: error al Eliminar!.", data: null })
                 } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                    if(results.rowCount == 0){
+                        pool.query('update seg_rol set n_borrado = 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_rol ='+n_idseg_rol+' ',          
+                        (error, results) => {
+                            if (error) {
+                                console.log(error);
+                                response.status(200).json({ estado: false, mensaje: "DB: error al Eliminar2!.", data: null })
+                            } else {
+                                response.status(200).json({ estado: true, mensaje: "Rol Eliminado", data: results.rows })
+                            }
+                        })                        
+                    }else{
+                        response.status(200).json({ estado: true, mensaje: "Existen Usuarios activos con el rol "+c_nombre, data: results.rows })
+                    }                    
                 }
             })
     } else {
@@ -437,6 +480,7 @@ module.exports = {
     saveUser,
     resetearclave,
     delete_usuario,
+    estadoUser,
     saveRol,
     deleteRol,
     getProyectos,
