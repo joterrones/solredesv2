@@ -82,10 +82,23 @@ const deleteAlmacen = (request,response) =>{
 const getGuia = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {        
-        let cadena = 'select guia.n_idalm_guia, guia.n_idalm_almacen, pe.n_idgen_periodo, guia.c_nombre, guia.c_direccion, al.c_nombre as c_nombreal, pe.c_descripcion as periodo, guia.c_ruc, guia.c_nroguia, guia.c_observacion from alm_guia guia \n\r' +
+        let cadena = 'select guia.n_idalm_guia, guia.n_idalm_almacen, pe.n_idgen_periodo, guia.c_nombre, guia.c_direccion, al.c_nombre as c_nombreal, pe.c_descripcion as periodo, split_part(pe.c_descripcion,\' \',1) as mes,pe.n_mes, split_part(pe.c_descripcion,\' \',2)::INT as annio,guia.c_ruc, guia.c_nroguia, guia.c_observacion from alm_guia guia \n\r' +
             'inner join alm_almacen al on al.n_idalm_almacen = guia.n_idalm_almacen \n\r' +   
             'inner join gen_periodo pe on pe.n_idgen_periodo = guia.n_idgen_periodo \n\r' +          
-            'where guia.n_borrado = 0 and (al.n_idalm_almacen = $1 or 0 = $1) and (pe.n_idgen_periodo = $2 or 0 = $2)'
+            'where guia.n_borrado = 0 and (al.n_idalm_almacen = $1 or 0 = $1) and (pe.n_idgen_periodo = $2 or 0 = $2) '+
+            'order by annio asc, (CASE WHEN split_part(c_descripcion,\' \',1) = \'Enero\' THEN 1 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Febrero\' THEN 2 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Marzo\' THEN 3 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Abril\' THEN 4 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Mayo\' THEN 5 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Junio\' THEN 6 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Julio\' THEN 7 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Agosto\' THEN 8 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Setiembre\' THEN 9 '+
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Octubre\' THEN 10 '+    
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Noviembre\' THEN 11 '+   
+                                    'WHEN split_part(c_descripcion,\' \',1)=\'Diciembre\' THEN 12 '+  
+                                    'ELSE 0 END)';
         pool.query(cadena,[request.body.n_idalm_almacen,request.body.n_idgen_periodo],            
             (error, results) => {
                 if (error) {
@@ -180,15 +193,55 @@ const getPeriodos = (request, response)=>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
         
-        let cadena = 'select n_idgen_periodo, c_descripcion from gen_periodo \n\r' +                       
-            'where n_borrado = 0'
+        let cadena = 'select  n_annio from gen_periodo where n_borrado = 0 group by n_annio';
         pool.query(cadena,         
             (error, results) => {
                 if (error) {
                     console.log(error)
-                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
-                } else {             
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                    response.status(200).json({ estado: false, mensaje: "DB: Error al traer Periodo 1!.", data: null })    
+                } else {
+                    let annio = results.rows;
+
+                    let cadena2 = 'select n_mes from gen_periodo where n_borrado = 0 group by n_mes';
+                    pool.query(cadena2,
+                        (error, results)=>{
+                            if(error){
+                                console.log(error)
+                                response.status(200).json({ estado: false, mensaje: "DB: Error al traer Periodo 2!.", data: null })    
+                            }else{
+                                let mes = results.rows;        
+
+                                let cadena3 = 'select n_idgen_periodo, c_descripcion,n_mes,split_part(c_descripcion,\' \',1) as mes, split_part(c_descripcion,\' \',2)::INT as annio from gen_periodo  where n_borrado = 0 '+
+                                                'order by annio asc, (CASE WHEN split_part(c_descripcion,\' \',1) = \'Enero\' THEN 1 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Febrero\' THEN 2 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Marzo\' THEN 3 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Abril\' THEN 4 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Mayo\' THEN 5 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Junio\' THEN 6 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Julio\' THEN 7 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Agosto\' THEN 8 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Setiembre\' THEN 9 '+
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Octubre\' THEN 10 '+    
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Noviembre\' THEN 11 '+   
+                                                'WHEN split_part(c_descripcion,\' \',1)=\'Diciembre\' THEN 12 '+  
+                                                'ELSE 0 END)'
+                                                ;
+                                pool.query(cadena3,
+                                    (error,results)=>{
+                                        if(error){
+                                            console.log(error)
+                                            response.status(200).json({ estado: false, mensaje: "DB: Error al traer Periodo 3!.", data: null })
+                                        }else{
+                                            let periodos = results.rows;
+                                            response.status(200).json({ estado: true, mensaje: "", 
+                                                data: {annio: annio, mes: mes, periodos: periodos} 
+                                            })
+                                        }
+                                    })
+                                
+                            }
+                    })
+                    
                 }
             })
     } else {
@@ -221,7 +274,7 @@ const getElementos = (request, response)=>{
     if (obj.estado) {
         
         let cadena = 'select n_idpl_elemento, c_nombre from pl_elemento \n\r' +                       
-            'where n_borrado = 0'
+            'where n_borrado = 0 order by c_nombre asc'
         pool.query(cadena,         
             (error, results) => {
                 if (error) {
@@ -351,6 +404,62 @@ const deleteDetalleGuia = (request,response) =>{
     }
 }
 
+const savePeriodo = (request,response)=>{
+    var obj = valida.validaToken(request)
+    
+    if (obj.estado) {
+
+        let annio = request.body.annio; 
+        let c_descripcion = request.body.c_descripcion;                                    
+        //let mes = request.body.mes;
+        let n_id_usermodi = request.body.n_id_usermodi;
+        let n_idgen_periodo = request.body.n_idgen_periodo;
+        let n_mes = request.body.n_mes;
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idgen_periodo from gen_periodo where n_borrado = 0 and n_idgen_periodo =\'' + n_idgen_periodo + '\')) then \n\r' +
+            '           update gen_periodo set n_annio ='+ annio +', n_mes=\' '+ n_mes +' \', c_descripcion=\''+c_descripcion+'\',n_id_usermodi='+ n_id_usermodi +', d_fechamodi=now() \n\r' +
+            '                  where n_idgen_periodo =\'' + n_idgen_periodo + '\'; \n\r' +
+            '       else \n\r' +
+            '           insert into gen_periodo(n_idgen_periodo, n_annio, n_mes,c_descripcion, n_borrado, n_id_usercrea, d_fechacrea)\n\r' +
+            '           values (default,' + annio + ',' + n_mes + ',\''+ c_descripcion +'\',0, '+n_id_usermodi+',now());\n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error al guardar Periodo!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deletePeriodo = (request,response) =>{
+    var obj = valida.validaToken(request)
+    
+    let n_idgen_periodo = request.body.n_idgen_periodo;
+    let n_id_usermodi = request.body.n_id_usermodi;
+
+    if (obj.estado) {
+        pool.query('update gen_periodo set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idgen_periodo='+n_idgen_periodo+' ',
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error al Eliminar!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
 
 module.exports = {
     getAlmacen,
@@ -367,4 +476,6 @@ module.exports = {
     saveDetalleGuia,
     deleteDetalleGuia,
     saveImgDetalleGuia,
+    savePeriodo,
+    deletePeriodo
 }

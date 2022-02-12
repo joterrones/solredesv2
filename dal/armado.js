@@ -16,9 +16,9 @@ const get = (request, response) => {
   
     pool.query('SELECT a.n_idpl_armado,a.c_codigo,a.c_nombre,a.c_codigo_corto,a.c_iconomapa,a.c_rutaimg,a.n_idpl_tipoarmado,a.b_especial,a.n_version, ta.c_codigo as c_codigotipoarmado,a.n_idpro_proyecto,a.c_nombrelamina FROM pl_armado a  '+
     'inner join pl_tipoarmado ta on a.n_idpl_tipoarmado = ta.n_idpl_tipoarmado and ta.n_borrado = 0 '+
-    'where a.n_borrado = 0 and (a.n_idpl_tipoarmado=$1 or 0=$1) and (a.n_version=$2 or 0=$2) ' +
+    'where a.n_borrado = 0 and (a.n_idpl_tipoarmado=$1 or 0=$1) and (a.n_version=$2 or 0=$2) and a.n_idpro_proyecto = $3' +
     'order by ta.c_codigo asc', 
-    [request.body.n_idpl_tipoarmado,request.body.n_version],(error, results) => {
+    [request.body.n_idpl_tipoarmado,request.body.n_version, request.body.n_idpro_proyecto],(error, results) => {
       if (error) {
         response.status(200).json({estado:false,mensaje:"ocurrio un error al traer los datos del armado!.",data:null})
       }else{
@@ -82,7 +82,7 @@ const get = (request, response) => {
   
   const gettipoarmado = (request, response) => {   
     //pool = cnx.dynamic_connection(request.body.proyecto);
-    pool.query('SELECT n_idpl_tipoarmado,c_codigo,c_nombre FROM pl_tipoarmado where n_borrado = 0 ORDER BY n_idpl_tipoarmado ASC', (error, results) => {
+    pool.query('SELECT n_idpl_tipoarmado,c_codigo,c_nombre FROM pl_tipoarmado where n_borrado = 0 ORDER BY c_nombre ASC', (error, results) => {
       if (error) {
         response.status(200).json({estado:false,mensaje:"ocurrio un error al traer los datos del tipo armado!.",data:null})
       }else{

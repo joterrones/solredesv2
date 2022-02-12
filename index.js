@@ -200,13 +200,15 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
   });
 }) 
 app.post('/api/almacen/saveImgDetalleGuia',bdAlmacen.saveImgDetalleGuia)
+app.post('/api/almacen/savePeriodo',bdAlmacen.savePeriodo) 
+app.post('/api/almacen/deletePeriodo',bdAlmacen.deletePeriodo)
 
 
 /* Gestion de archivos */
 app.post('/api/AdmArchivos/getArchivo',bdArchivos.getArchivo) 
 app.post('/api/AdmArchivos/saveArchivo',bdArchivos.saveArchivo) 
 app.post('/api/AdmArchivos/deleteArchivo',bdArchivos.deleteArchivo) 
-app.post('/api/AdmArchivos/getCarpetas',bdArchivos.getCarpetas)
+app.post('/api/AdmArchivos/getCarpetas',bdArchivos.getCarpetas) 
 //--------------------------------------------
 var checksum = require('checksum')
 //--------------------------------------------
