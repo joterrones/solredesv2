@@ -156,6 +156,7 @@ const get = (request, response) => {
   
   const getestructurametrado = (request, response) => {
     var estructuras,metrados;
+    console.log(request.body.n_idpl_elemento, request.body.n_idpl_linea, request.body.n_version);
     pool.query(
       'select distinct ' +
       '   n_idpl_estructura,  ' +
