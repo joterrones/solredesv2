@@ -157,6 +157,7 @@ const insertSuministro = async (request, response) => {
         let i = 0;
         let resultados = [];
         let estructuras = request.body.estructuras;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto
         estructuras.forEach(async element => {
             try {
                 var cadena = 'select id,c_mensaje, b_flag,n_flag from fn_node_insert_planilla_suministro( \'' +
@@ -165,7 +166,7 @@ const insertSuministro = async (request, response) => {
                     element.CODIGO_SUMINISTRO + '\',\'' +
                     element.DESCRIPCION_SUMINISTRO + '\',\'' +
                     element.UNIDAD + '\'' +
-                    ')';
+                    ','+ n_idpro_proyecto +')';
                 let queryImportacion = await pool.query(cadena);
 
                 if (queryImportacion.rowCount > 0) {
@@ -199,6 +200,8 @@ const insertMontaje = async (request, response) => {
         let i = 0;
         let resultados = [];
         let estructuras = request.body.estructuras;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
+        console.log("ENTRA");
         estructuras.forEach(async element => {
             
             try {
@@ -208,7 +211,7 @@ const insertMontaje = async (request, response) => {
                     element.CODIGO_MONTAJE + '\',\'' +
                     element.DESCRIPCION_MONTAJE + '\',\'' +
                     element.UNIDAD + '\'' +
-                    ')';
+                    ','+ n_idpro_proyecto +')';
                 let queryImportacion = await pool.query(cadena);
                 console.log(cadena);
                 if (queryImportacion.rowCount > 0) {

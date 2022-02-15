@@ -113,9 +113,9 @@ app.post('/api/configuracionGeneral/asignarLineaUser',bdConfiguracionGeneral.asi
 app.post('/api/configuracionGeneral/getTipoElemento',bdConfiguracionGeneral.getTipoElemento)
 app.post('/api/configuracionGeneral/saveTipoElemento',bdConfiguracionGeneral.saveTipoElemento)
 app.post('/api/configuracionGeneral/deleteTipoElemento',bdConfiguracionGeneral.deleteTipoElemento)
-app.post('/api/configuracionGeneral/getTipoMontaje',bdConfiguracionGeneral.getTipoMontaje)
-app.post('/api/configuracionGeneral/saveTipoMontaje',bdConfiguracionGeneral.saveTipoMontaje)
-app.post('/api/configuracionGeneral/deleteTipoMontaje',bdConfiguracionGeneral.deleteTipoMontaje)
+app.post('/api/configuracionGeneral/getTablaCateTipoMontaje',bdConfiguracionGeneral.getTablaCateTipoMontaje)
+app.post('/api/configuracionGeneral/saveCateTipoMontaje',bdConfiguracionGeneral.saveCateTipoMontaje)
+app.post('/api/configuracionGeneral/deleteCateTipoMontaje',bdConfiguracionGeneral.deleteCateTipoMontaje)
 app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
   let archivo = req.query.archivo;
   console.log(archivo)
@@ -157,6 +157,9 @@ app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
 app.post('/api/configuracionGeneral/saveProImg',bdConfiguracionGeneral.saveProImg)    
 app.post('/api/configuracionGeneral/saveProImgLogo',bdConfiguracionGeneral.saveProImgLogo) 
 app.post('/api/configuracionGeneral/saveColorPro',bdConfiguracionGeneral.saveColorPro)
+app.post('/api/configuracionGeneral/getTipoMontaje',bdConfiguracionGeneral.getTipoMontaje)
+app.post('/api/configuracionGeneral/saveTipoMontaje',bdConfiguracionGeneral.saveTipoMontaje)
+app.post('/api/configuracionGeneral/deleteTipoMontaje',bdConfiguracionGeneral.deleteTipoMontaje)
 
 
 /*Almacen */
@@ -403,7 +406,8 @@ app.listen(port, () => {
 
 /*Elemento*/
 app.post('/api/elemento/get', dbElemento.get)
-app.post('/api/elemento/updateconfig', dbElemento.updateconfig)
+app.post('/api/elemento/updateconfig', dbElemento.updateconfig) 
+app.post('/api/elemento/getTipoElemento', dbElemento.getTipoElemento)
 
 /* Dashboard */
 app.post('/api/dashboard/getLineas', dbDashboard.getLineas)

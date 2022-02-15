@@ -7,9 +7,15 @@ let pool = cnx.pool;
 
 const get = (request, response) => {
   //pool = cnx.dynamic_connection(request.body.proyecto);
-  pool.query('select n_idpl_elemento,c_unidadmedida,c_codigo,c_nombre,b_partidanueva,c_material,c_esfuerzo,c_altura,c_seccionconductor from pl_elemento where n_borrado = 0 ORDER BY left(c_codigo,2) asc,Cast(REPLACE(REPLACE(REPLACE(c_codigo,\'LP_\',\'\'),\'RP_\',\'\'),\'RS_\',\'\') as Float) asc', (error, results) => {
+  
+  pool.query('select p.n_idpl_elemento,p.c_unidadmedida,p.c_codigo,p.c_nombre,p.b_partidanueva,p.c_material,p.c_esfuerzo,p.c_altura,p.c_seccionconductor from pl_elemento p ' +
+            ' inner join pl_tipoelemento tp on tp.n_idpl_tipoelemento =  p.n_idpl_tipoelemento and tp.n_borrado = 0 '+
+            ' where p.n_borrado = 0 and tp.n_idpro_proyecto = $1 and (p.n_idpl_tipoelemento = $2 or 0 = $2) ORDER BY left(p.c_codigo,2) asc,Cast(REPLACE(REPLACE(REPLACE(p.c_codigo,\'LP_\',\'\'),\'RP_\',\'\'),\'RS_\',\'\') as Float) asc ',
+            [request.body.n_idpro_proyecto, request.body.n_idpl_tipoelemento],
+            (error, results) => {
     if (error) {
-      response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos del armado!.", data: null })
+      console.log(error);
+      response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos del elemento!.", data: null })
     } else {
 
       var array = [];
@@ -94,8 +100,23 @@ const updateconfig = (request, response) => {
     })
 }
 
+const getTipoElemento = (request, response) => {
+  
+  pool.query('select n_idpl_tipoelemento, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2,c_nombre from pl_tipoelemento ' + 
+            'where n_borrado = 0 and n_idpro_proyecto = $1 ' +
+            'order by div asc, div2 asc',
+    [request.body.n_idpro_proyecto], (error, results) => {
+      if (error) {
+        response.status(200).json({ estado: false, mensaje: "ocurrio un error al actualizar el elemento!.", data: null })
+      } else {
+        response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+      }
+    })
+}
+
 
 module.exports = {
   get,
-  updateconfig
+  updateconfig,
+  getTipoElemento
 }

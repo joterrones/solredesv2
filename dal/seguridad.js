@@ -139,7 +139,7 @@ const estadoUser = (request, response) => {
         let n_idseg_userprofile = request.body.n_idseg_userprofile;
         let n_id_usermodi = request.body.n_id_usermodi;
         let b_activo = request.body.b_activo;
-        console.log(n_idseg_userprofile)
+        //console.log(n_idseg_userprofile)
         pool.query('update seg_userprofile set b_activo = \''+ b_activo +'\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now()  where n_idseg_userprofile ='+n_idseg_userprofile+' ',             
             (error, results) => {
                 if (error) {
@@ -172,7 +172,7 @@ const getrole = (request, response) => {
 
 const getRolUser = (request, response) => {
     var obj = valida.validaToken(request);
-    console.log(request.body.n_idseg_userprofile);
+    //console.log(request.body.n_idseg_userprofile);
     if (obj.estado) {
         let cadena = 'select us.c_username, rol.n_idseg_rol, rol.c_nombre from seg_userprofile us \n\r' +
             'inner join seg_rol rol on rol.n_idseg_rol = us.n_idseg_rol \n\r' + 

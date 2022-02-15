@@ -956,12 +956,12 @@ const deleteTipoElemento = (request, response) =>{
     }
 }
 
-const getTipoMontaje = (request, response) => {
+const getTablaCateTipoMontaje = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        
         pool.query('select n_idmon_categoriatipomontaje, c_nombre, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2 from mon_categoriatipomontaje '+
-                ' where n_borrado = 0	order by div asc, div2 asc',        
+                ' where n_borrado = 0 and n_idpro_proyecto= $1 order by div asc, div2 asc',  
+                [request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -974,7 +974,7 @@ const getTipoMontaje = (request, response) => {
     }
 }
 
-const saveTipoMontaje = (request, response) => {
+const saveCateTipoMontaje = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         let n_idmon_categoriatipomontaje = request.body.n_idmon_categoriatipomontaje;
@@ -1007,7 +1007,7 @@ const saveTipoMontaje = (request, response) => {
     }
 }
 
-const deleteTipoMontaje = (request, response) =>{
+const deleteCateTipoMontaje = (request, response) =>{
     var obj = valida.validaToken(request)
     let n_idmon_categoriatipomontaje = request.body.n_idmon_categoriatipomontaje;
     let n_id_usermodi = request.body.n_id_usermodi;
@@ -1092,6 +1092,83 @@ const saveColorPro = (request, response) => {
     }
 }
 
+const getTipoMontaje = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('select tp.n_idmon_tipomontaje, tp.c_codigo, tp.c_nombre, split_part(tp.c_codigo,\'_\',1) as div, split_part(tp.c_codigo,\'_\',2) as div2, tp.n_idmon_categoriatipomontaje,ctp.c_nombre as nombrecat, pl.n_idpl_tipolinea,pl.c_nombre as nombretp,tp.c_unidadmedida from mon_tipomontaje tp '+
+                    'inner join mon_categoriatipomontaje ctp on ctp.n_idmon_categoriatipomontaje = tp.n_idmon_categoriatipomontaje and ctp.n_borrado = 0 and ctp.n_idpro_proyecto = $1 '+
+                    'inner join pl_tipolinea pl on pl.n_idpl_tipolinea = tp.n_idpl_tipolinea and pl.n_borrado = 0 '+
+                    'where tp.n_borrado = 0 and (tp.n_idmon_categoriatipomontaje = $2 or 0 = $2) and (tp.n_idpl_tipolinea = $3 or 0 = $3)'+
+                    'order by div asc, div2 asc',  
+                [request.body.n_idpro_proyecto, request.body.n_idmon_categoriatipomontaje, request.body.n_idpl_tipolinea],
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error al traer Tipo Montaje!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveTipoMontaje = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idmon_tipomontaje = request.body.n_idmon_tipomontaje;
+        let c_codigo = request.body.c_codigo;   
+        let c_nombre = request.body.c_nombre;
+        let n_idmon_categoriatipomontaje = request.body.n_idmon_categoriatipomontaje;
+        let n_idpl_tipolinea = request.body.n_idpl_tipolinea;
+        let c_unidadmedida = request.body.c_unidadmedida;
+        let n_id_usermodi = request.body.n_id_usermodi;
+
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idmon_tipomontaje from mon_tipomontaje where n_idmon_tipomontaje = \'' + n_idmon_tipomontaje + '\')) then \n\r' +
+            '           update mon_tipomontaje set c_nombre= \'' + c_nombre + '\', c_codigo=\'' + c_codigo + '\', n_idmon_categoriatipomontaje='+n_idmon_categoriatipomontaje+',n_idpl_tipolinea='+n_idpl_tipolinea+',c_unidadmedida=\''+c_unidadmedida+'\',n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idmon_tipomontaje = \''+ n_idmon_tipomontaje +'\' ; \n\r' +
+            '       else \n\r' +
+            '           insert into mon_tipomontaje(n_idmon_tipomontaje, c_nombre,c_codigo, n_idmon_categoriatipomontaje,n_idpl_tipolinea,c_unidadmedida,n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\', '+n_idmon_categoriatipomontaje+','+n_idpl_tipolinea+',\''+c_unidadmedida+'\',0,now(), '+n_id_usermodi+'); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error al guardar.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+            
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteTipoMontaje = (request, response) =>{
+    var obj = valida.validaToken(request)
+    let n_idmon_tipomontaje = request.body.n_idmon_tipomontaje;
+    let n_id_usermodi = request.body.n_id_usermodi;
+    if (obj.estado) {
+        pool.query('update mon_tipomontaje set n_borrado= 1, n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idmon_tipomontaje='+n_idmon_tipomontaje,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
 
 module.exports = {
     getempresa,
@@ -1134,10 +1211,13 @@ module.exports = {
     getTipoElemento,
     saveTipoElemento,
     deleteTipoElemento,
-    getTipoMontaje,
-    saveTipoMontaje,
-    deleteTipoMontaje,
+    getTablaCateTipoMontaje,
+    saveCateTipoMontaje,
+    deleteCateTipoMontaje,
     saveProImg,
     saveProImgLogo,
-    saveColorPro
+    saveColorPro,
+    getTipoMontaje,
+    saveTipoMontaje,
+    deleteTipoMontaje
 }
