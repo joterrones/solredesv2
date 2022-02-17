@@ -97,15 +97,80 @@ const getLineas = (request, response) => {
                                                     nomZona.push(element.nombrezona);
                                                     cantidadZona.push(parseInt(element.cantidad));
                                                 });
+
+                                                let cadena = 'with expediente as ( '+
+                                                                'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_expediente)as expediente from pl_tipolinea tl '+
+                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_expediente is true '+
+                                                                'where tl.n_borrado = 0  '+
+                                                                'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
+                                                            '), '+
+                                                            'replanteo as ( '+
+                                                                'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_replanteo)as replanteo from pl_tipolinea tl '+
+                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_replanteo is true '+
+                                                                'where tl.n_borrado = 0  '+
+                                                                'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
+                                                            '), '+
+                                                            'montaje as ( '+
+                                                                'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_montaje)as montaje from pl_tipolinea tl '+
+                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_montaje is true '+
+                                                                'where tl.n_borrado = 0  '+
+                                                                'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
+                                                            '), '+
+                                                            'cierre as ( '+
+                                                                'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_cierre)as cierre from pl_tipolinea tl '+
+                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_cierre is true '+
+                                                                'where tl.n_borrado = 0  '+
+                                                                'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
+                                                            ') '+
+                                                            'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.n_idpl_tipolinea)as total, e.expediente, r.replanteo, m.montaje, c.cierre,z.n_idpro_proyecto from pl_tipolinea tl '+
+                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 '+
+                                                                'left join expediente e on tl.n_idpl_tipolinea = e.n_idpl_tipolinea '+
+                                                                'left join replanteo r on tl.n_idpl_tipolinea = r.n_idpl_tipolinea '+
+                                                                'left join montaje m on tl.n_idpl_tipolinea = m.n_idpl_tipolinea '+
+                                                                'left join cierre c on tl.n_idpl_tipolinea = c.n_idpl_tipolinea '+
+                                                                'left join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+' '+
+                                                                'where tl.n_borrado = 0 '+
+                                                                'group by  tl.n_idpl_tipolinea, tl.c_nombre, e.expediente, r.replanteo, m.montaje, c.cierre, z.n_idpro_proyecto ';
                                                 
-                                                response.status(200).json({                            
-                                                    estado: true, mensaje: "", data: {
-                                                        graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras, cantidadesmon:cantidades_de_mon},
-                                                        graficozonas: { claves: zonas, cantidades: cantidadesdelineas},
-                                                        graficoperiodo: { claves: fechas, cantidades: cantidadesregistro},
-                                                        graficozon: { claves: nomZona, cantidades: cantidadZona}
+                                                pool.query( cadena , (error, results) =>{
+                                                    if(error){
+                                                        console.log(error);
+                                                        response.status(200).json({ estado: false, mensaje: "DB: error datos. getLineas6" + error.stack, data: null })
+                                                    }else{
+
+                                                        let array = results.rows;
+
+                                                        let tplinea = [];
+                                                        let total = [];
+                                                        let expediente = [];
+                                                        let replanteo = [];
+                                                        let montaje = [];
+                                                        let cierre = [];
+
+                                                        array.forEach(element => {
+                                                            if(element.n_idpro_proyecto){
+                                                                tplinea.push(element.c_nombre)
+                                                                total.push(element.total)
+                                                                expediente.push(element.expediente)
+                                                                replanteo.push(element.replanteo)
+                                                                montaje.push(element.montaje)
+                                                                cierre.push(element.cierre)
+                                                            }
+                                                        });
+
+                                                        response.status(200).json({                            
+                                                            estado: true, mensaje: "", data: {
+                                                                graficolineas: { claves: lineas, cantidades: cantidadesdeestructuras, cantidadesmon:cantidades_de_mon},
+                                                                graficozonas: { claves: zonas, cantidades: cantidadesdelineas},
+                                                                graficoperiodo: { claves: fechas, cantidades: cantidadesregistro},
+                                                                graficozon: { claves: nomZona, cantidades: cantidadZona},
+                                                                graficoLineaEstado: { datos: array, tplinea: tplinea, total: total, expediente: expediente, replanteo: replanteo, montaje: montaje, cierre: cierre}
+                                                            }
+                                                        })
                                                     }
                                                 })
+                                                
+                                                
                                             }
                                         })
                                     }

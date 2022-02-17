@@ -19,6 +19,7 @@ const dbMetrado = require('./dal/metrado')
 const dbDashboard = require('./dal/dashboard')
 const dbMovil = require('./dal/movil')
 const dbFicha = require('./dal/ficha')
+const dbExportar = require('./dal/exportar')
 const app = express()
 const port = 3200
 
@@ -79,6 +80,7 @@ app.post('/api/configuracionGeneral/deleteEmpresa',bdConfiguracionGeneral.delete
 app.post('/api/configuracionGeneral/saveLinea',bdConfiguracionGeneral.saveLinea)
 app.post('/api/configuracionGeneral/getLinea',bdConfiguracionGeneral.getLinea)
 app.post('/api/configuracionGeneral/deleteLinea',bdConfiguracionGeneral.deleteLinea) 
+app.post('/api/configuracionGeneral/estadoLinea',bdConfiguracionGeneral.estadoLinea)
 app.post('/api/configuracionGeneral/gettipolinea',bdConfiguracionGeneral.gettipolinea) 
 app.post('/api/configuracionGeneral/saveTipoLinea',bdConfiguracionGeneral.saveTipoLinea) 
 app.post('/api/configuracionGeneral/deleteTipoLinea',bdConfiguracionGeneral.deleteTipoLinea)
@@ -414,3 +416,6 @@ app.post('/api/dashboard/getLineas', dbDashboard.getLineas)
 
 /*Ficha */
 app.post('/api/ficha/get', dbFicha.get)
+
+/*Exportar*/
+app.post('/api/exportar/exportar', dbExportar.exportar)

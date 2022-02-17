@@ -51,6 +51,7 @@ const insertplanilla = async (request, response) => {
         let i = 0;
         let resultados = [];
         let estructuras = request.body.estructuras;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
         estructuras.forEach(async element => {
             try {
                 var cadena = 'select id,c_mensaje, b_flag,n_flag from fn_node_insert_planilla_lprp( ' +
@@ -105,7 +106,7 @@ const insertplanilla = async (request, response) => {
                     element.ZONA + ',\'' +
                     element.FUNCION_ARMADO + '\',' +
                     element.VERSION +
-                    ')';
+                    ','+ n_idpro_proyecto +')';
                 let queryImportacion = await pool.query(cadena);
 
                 if (queryImportacion.rowCount > 0) {
