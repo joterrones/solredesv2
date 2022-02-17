@@ -46,8 +46,8 @@ const get = (request, response) => {
     '           update pl_armado set c_codigo= \'' + c_codigo + '\', c_nombre=\''+ c_nombre +'\', c_codigo_corto=\''+ c_codigo_corto +'\', c_iconomapa=\''+ c_iconomapa +'\', c_rutaimg=\''+ c_rutaimg +'\', n_idpl_tipoarmado='+n_idpl_tipoarmado+', n_version='+ n_version +', c_nombrelamina=\''+ c_nombrelamina +'\' \n\r' +
     '                  where n_idpl_armado =\'' + n_idpl_armado + '\'; \n\r' +
     '       else \n\r' +
-    '           INSERT INTO pl_armado (n_idpl_armado,c_codigo,c_nombre,c_codigo_corto,c_iconomapa,c_rutaimg,c_nombrelamina,n_idpl_tipoarmado,n_version,n_borrado,d_fechacrea, n_id_usercrea)\n\r' +
-    '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\',\''+ c_codigo_corto +'\', \''+ c_iconomapa+'\',\''+ c_rutaimg +'\',\''+ c_nombrelamina +'\','+ n_idpl_tipoarmado +',\''+ n_version +'\', 0, now(), 1);\n\r' +
+    '           INSERT INTO pl_armado (n_idpl_armado,c_codigo,c_nombre,c_codigo_corto,c_iconomapa,c_rutaimg,c_nombrelamina,n_idpl_tipoarmado,n_version,n_idpro_proyecto,n_borrado,d_fechacrea, n_id_usercrea)\n\r' +
+    '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\',\''+ c_codigo_corto +'\', \''+ c_iconomapa+'\',\''+ c_rutaimg +'\',\''+ c_nombrelamina +'\','+ n_idpl_tipoarmado +',\''+ n_version +'\', '+n_idpro_proyecto+',0, now(), 1);\n\r' +
     '       end if; \n\r' +
     '   end \n\r' +
     '$$';
