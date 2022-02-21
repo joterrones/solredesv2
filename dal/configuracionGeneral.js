@@ -95,7 +95,7 @@ const getLinea = (request, response) => {
             'left join pl_zona zn on zn.n_idpl_zona = l.n_idpl_zona and zn.n_borrado = 0\n\r' +
             'inner join pro_proyecto pro on pro.n_idpro_proyecto = zn.n_idpro_proyecto \n\r' +
             'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2) and (zn.n_idpro_proyecto = $3 or 0 = $3) and ( l.b_expediente is '+estadoSelectb_expediente+' or null is '+estadoSelectb_expediente+' ) and ( l.b_replanteo is '+estadoSelectb_replanteo+' or null is '+estadoSelectb_replanteo+') and (l.b_montaje is '+estadoSelectb_montaje+' or null is '+estadoSelectb_montaje+') and (l.b_cierre is '+estadoSelectb_cierre+' or null is '+estadoSelectb_cierre+') \n\r' +
-            'ORDER BY  c_nombrez asc, l.d_fechamodi asc'
+            'ORDER BY l.c_codigo asc, c_nombret asc,c_nombrez asc, l.d_fechamodi asc'
         pool.query(cadena,
             [request.body.n_idpl_tipolinea, request.body.n_idpl_zona, request.body.n_idpro_proyecto],
             (error, results) => {
