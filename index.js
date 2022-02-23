@@ -393,6 +393,8 @@ app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
 app.post('/api/mapa/getdetalle', dbMapa.getdetalle); 
 app.post('/api/mapa/getestructura', dbMapa.getestructura);
+app.post('/api/mapa/buscarLinea', dbMapa.buscarLinea);
+app.post('/api/mapa/insertOrientacion', dbMapa.insertOrientacion);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)
