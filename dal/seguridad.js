@@ -55,11 +55,11 @@ const get = (request, response) => {
     }
 }
 
-const valDni = (request, response) => {
+const validarDatos = (request, response) => {
     
-        let c_dni = request.body.c_dni;
-        console.log(c_dni);
-        let cadena ='select c_dni from seg_userprofile where n_borrado = 0 and c_dni =\'' + c_dni + '\'';
+    var obj = valida.validaToken(request)    
+    if(obj.estado){
+        let cadena ='select c_username, c_dni from seg_userprofile where n_borrado = 0 ';
 
         pool.query(cadena,
             (error, results) => {
@@ -67,10 +67,12 @@ const valDni = (request, response) => {
                     console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error.", data: null })
                 } else {
-                    response.status(200).json({ estado: true, mensaje: "DNI EXISTENTE", data: results.rows })
+                    response.status(200).json({ estado: true, mensaje: "ERROR AL TRAER DATOS DE VAL...", data: results.rows })
                 }
             })
-    
+    }else{
+        response.status(200).json(obj)
+    }    
 }
 
 const saveUser = (request, response) => {
@@ -371,15 +373,16 @@ const saveUserPro = (request, response)=>{
     var obj = valida.validaToken(request)
     let n_idpro_proyecto = request.body.n_idpro_proyecto;
     let n_idseg_userprofile = request.body.n_idseg_userprofile;
+    let n_id_usermodi = request.body.n_id_usermodi
     if (obj.estado) {
         
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idseg_userprofile, n_idpro_proyecto from pro_usuarioproyecto where n_idpro_proyecto = '+ n_idpro_proyecto +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
-            '           update pro_usuarioproyecto set n_borrado = 0 where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
+            '           update pro_usuarioproyecto set n_borrado = 0, n_is_usermodi = '+n_id_usermodi+' where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
             '       else \n\r' +
-            '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
-            '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, 1, 1, now(), now()); \n\r' +
+            '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+            '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -424,7 +427,7 @@ const getPantalla = (request, response) => {
     if (obj.estado) {
         let cadena = 'select pt.n_idseg_pantalla, pt.c_codigo, pt.c_nombre,ptr.n_idseg_rol, ptr.c_permiso from seg_pantalla pt \n\r' +
         'left join seg_pantallarol ptr on ptr.n_idseg_pantalla = pt.n_idseg_pantalla and ptr.n_idseg_rol = $1 \n\r' + 
-        'where pt.n_borrado = 0'  
+        'where pt.n_borrado = 0 order by pt.c_codigo asc, pt.c_nombre asc '  
         pool.query(cadena,[request.body.n_idseg_rol],
             (error, results) => {
                 if (error) {
@@ -476,7 +479,7 @@ module.exports = {
     get,
     getrole,
     getRolUser,
-    valDni,
+    validarDatos,
     saveUser,
     resetearclave,
     delete_usuario,
