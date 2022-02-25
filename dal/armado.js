@@ -39,15 +39,16 @@ const get = (request, response) => {
     let n_idpro_proyecto = request.body.n_idpro_proyecto;
     let n_idpl_tipoarmado = request.body.n_idpl_tipoarmado;
     let n_version = request.body.n_version;
+    let n_id_usermodi = request.body.n_id_usermodi;
 
     let cadena = 'do $$ \n\r' +
     '   begin \n\r' +
     '       if(exists(select n_idpl_armado from pl_armado where n_borrado = 0 and n_idpl_armado ='+ n_idpl_armado +')) then \n\r' +
-    '           update pl_armado set c_codigo= \'' + c_codigo + '\', c_nombre=\''+ c_nombre +'\', c_codigo_corto=\''+ c_codigo_corto +'\', c_iconomapa=\''+ c_iconomapa +'\', c_rutaimg=\''+ c_rutaimg +'\', n_idpl_tipoarmado='+n_idpl_tipoarmado+', n_version='+ n_version +', c_nombrelamina=\''+ c_nombrelamina +'\' \n\r' +
-    '                  where n_idpl_armado =\'' + n_idpl_armado + '\'; \n\r' +
+    '           update pl_armado set c_codigo= \'' + c_codigo + '\', c_nombre=\''+ c_nombre +'\', c_codigo_corto=\''+ c_codigo_corto +'\', c_iconomapa=\''+ c_iconomapa +'\', c_rutaimg=\''+ c_rutaimg +'\', n_idpl_tipoarmado='+n_idpl_tipoarmado+', n_version='+ n_version +', c_nombrelamina=\''+ c_nombrelamina +'\', \n\r' +
+    '                  n_id_usermodi = '+n_id_usermodi+' where n_idpl_armado =\'' + n_idpl_armado + '\'; \n\r' +
     '       else \n\r' +
     '           INSERT INTO pl_armado (n_idpl_armado,c_codigo,c_nombre,c_codigo_corto,c_iconomapa,c_rutaimg,c_nombrelamina,n_idpl_tipoarmado,n_version,n_idpro_proyecto,n_borrado,d_fechacrea, n_id_usercrea)\n\r' +
-    '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\',\''+ c_codigo_corto +'\', \''+ c_iconomapa+'\',\''+ c_rutaimg +'\',\''+ c_nombrelamina +'\','+ n_idpl_tipoarmado +',\''+ n_version +'\', '+n_idpro_proyecto+',0, now(), 1);\n\r' +
+    '           values (default,\'' + c_codigo + '\',\'' + c_nombre + '\',\''+ c_codigo_corto +'\', \''+ c_iconomapa+'\',\''+ c_rutaimg +'\',\''+ c_nombrelamina +'\','+ n_idpl_tipoarmado +',\''+ n_version +'\', '+n_idpro_proyecto+',0, now(), '+n_id_usermodi+');\n\r' +
     '       end if; \n\r' +
     '   end \n\r' +
     '$$';
@@ -66,7 +67,7 @@ const get = (request, response) => {
   const deleteArmado = (request,response) =>{
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('update pl_armado set n_borrado= $1 where n_idpl_armado= $1',[request.body.n_idpl_armado],
+        pool.query('update pl_armado set n_borrado= $1, n_id_usermodi = $2 where n_idpl_armado= $1',[request.body.n_idpl_armado,request.body.n_id_usermodi],
             (error, results) => {
                 if (error) {
                     console.log(error);
@@ -125,6 +126,7 @@ const get = (request, response) => {
     var n_idpl_armado = request.body.n_idpl_armado
     var n_idpl_elemento = request.body.n_idpl_elemento
     var n_cantidad = parseFloat(request.body.n_cantidad)
+    var n_id_usermodi = request.body.n_id_usermodi;
   
     pool.query('SELECT n_idpl_armadoelemento FROM pl_armadoelemento where n_borrado = 0 and n_idpl_armado=$1 and n_idpl_elemento=$2',[n_idpl_armado,n_idpl_elemento], (error, results) => {
       if (error) {
@@ -133,8 +135,8 @@ const get = (request, response) => {
         console.log("Entro")
         if(results.rows.length==0){
           console.log("Insertando")
-            pool.query('INSERT INTO pl_armadoelemento(n_idpl_armadoelemento,n_idpl_armado,n_idpl_elemento,n_cantidad,n_borrado,n_id_usercrea,d_fechacrea) VALUES (default, $1, $2, $3, 0, 1, now()) RETURNING *',
-              [n_idpl_armado,n_idpl_elemento,n_cantidad], (error, results) => {
+            pool.query('INSERT INTO pl_armadoelemento(n_idpl_armadoelemento,n_idpl_armado,n_idpl_elemento,n_cantidad,n_borrado,n_id_usercrea,d_fechacrea) VALUES (default, $1, $2, $3, 0, $4, now()) RETURNING *',
+              [n_idpl_armado,n_idpl_elemento,n_cantidad,n_id_usermodi], (error, results) => {
               if (error) {
                 response.status(200).json({estado:false,mensaje:"ocurrio un error al guardar el armado!.", data:null})
               }else{
@@ -143,8 +145,8 @@ const get = (request, response) => {
             })
         }else{
           console.log("ACtualizando")
-          pool.query('UPDATE pl_armadoelemento set n_cantidad = $3 where n_idpl_armado=$1 and n_idpl_elemento=$2 RETURNING *',
-              [n_idpl_armado,n_idpl_elemento,n_cantidad], (error, results) => {
+          pool.query('UPDATE pl_armadoelemento set n_cantidad = $3, n_id_usermodi = $4 where n_idpl_armado=$1 and n_idpl_elemento=$2 RETURNING *',
+              [n_idpl_armado,n_idpl_elemento,n_cantidad, n_id_usermodi], (error, results) => {
               if (error) {
                 response.status(200).json({estado:false,mensaje:"ocurrio un error al config armado!.", data:null})
               }else{
@@ -193,6 +195,7 @@ const get = (request, response) => {
     var n_idpl_armado = request.body.n_idpl_armado
     var n_idmon_tipomontaje = request.body.n_idmon_tipomontaje
     var estado = request.body.estado
+    var n_id_usermodi = request.body.n_id_usermodi
     pool.query('SELECT n_idpl_armadotipomontaje FROM pl_armadotipomontaje where n_borrado = 0 and n_idpl_armado=$1 and n_idmon_tipomontaje=$2',[n_idpl_armado,n_idmon_tipomontaje], (error, results) => {
       if (error) {
         response.status(200).json({estado:false,mensaje:"ocurrio un error al traer los versión del armado!.",data:null})
@@ -201,8 +204,8 @@ const get = (request, response) => {
         if(results.rows.length==0){
           console.log("Insertando")
           if(estado){
-            pool.query('INSERT INTO pl_armadotipomontaje(n_idpl_armadotipomontaje,n_idpl_armado,n_idmon_tipomontaje,n_borrado,n_id_usercrea,d_fechacrea) VALUES (default, $1, $2, 0, 1, now()) RETURNING *',
-              [n_idpl_armado,n_idmon_tipomontaje], (error, results) => {
+            pool.query('INSERT INTO pl_armadotipomontaje(n_idpl_armadotipomontaje,n_idpl_armado,n_idmon_tipomontaje,n_borrado,n_id_usercrea,d_fechacrea) VALUES (default, $1, $2, 0, $3, now()) RETURNING *',
+              [n_idpl_armado,n_idmon_tipomontaje,n_id_usermodi], (error, results) => {
               if (error) {
                 response.status(200).json({estado:false,mensaje:"ocurrio un error al guardar el armado!.", data:null})
               }else{

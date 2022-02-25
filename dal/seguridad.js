@@ -352,8 +352,9 @@ const getUserPro = (request, response) => {
 
 const resetUserPro = (request, response) => {
     var obj = valida.validaToken(request)
+    let n_id_usermodi = request.body.n_id_usermodi;
     if (obj.estado) {
-        let cadena = 'update pro_usuarioproyecto set n_borrado = 1 \n\r' +     
+        let cadena = 'update pro_usuarioproyecto set n_borrado = 1, n_is_usermodi = '+n_id_usermodi+' \n\r' +     
             'where n_idseg_userprofile = $1'  
         pool.query(cadena,[request.body.n_idseg_userprofile],
             (error, results) => {
@@ -373,7 +374,8 @@ const saveUserPro = (request, response)=>{
     var obj = valida.validaToken(request)
     let n_idpro_proyecto = request.body.n_idpro_proyecto;
     let n_idseg_userprofile = request.body.n_idseg_userprofile;
-    let n_id_usermodi = request.body.n_id_usermodi
+    let n_id_usermodi = request.body.n_id_usermodi;
+    
     if (obj.estado) {
         
         let cadena = 'do $$ \n\r' +

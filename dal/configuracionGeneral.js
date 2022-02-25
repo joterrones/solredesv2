@@ -821,18 +821,17 @@ const resetProUser = (request, response) => {
 const saveProUser = (request, response) => {
 
     var obj = valida.validaToken(request)
-    console.log(request.body.n_idseg_userprofile);
-    console.log(request.body.n_idtra_grupo);
     let n_idseg_userprofile = request.body.n_idseg_userprofile;
     let n_idtra_grupo = request.body.n_idtra_grupo;
+    let n_id_usermodi = request.body.n_id_usermodi;
     if (obj.estado) {
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
-            '           update tra_grupousuario set b_activo = true	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+            '           update tra_grupousuario set b_activo = true, n_id_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
             '       else \n\r' +
-            '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
-            '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, 1, 1, now(), now()); \n\r' +
+            '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+            '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -882,14 +881,15 @@ const noAsignarLineaUser = (request, response) => {
     console.log(request.body.n_idtra_grupo);
     let n_idpl_linea = request.body.n_idpl_linea;
     let n_idtra_grupo = request.body.n_idtra_grupo;
+    let n_id_usermodi = request.body.n_id_usermodi;
     if (obj.estado) {
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
-            '           update tra_grupolinea set n_borrado = 1	where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+            '           update tra_grupolinea set n_borrado = 1, n_id_usermodi ='+n_id_usermodi+'	where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
             '       else \n\r' +
-            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
-            '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, 1, 1, now(), now()); \n\r' +
+            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+            '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -914,14 +914,15 @@ const asignarLineaUser = (request, response) => {
     console.log(request.body.n_idtra_grupo);
     let n_idpl_linea = request.body.n_idpl_linea;
     let n_idtra_grupo = request.body.n_idtra_grupo;
+    let n_id_usermodi = request.body.n_id_usermodi;
     if (obj.estado) {
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
-            '           update tra_grupolinea set n_borrado = 0	where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+            '           update tra_grupolinea set n_borrado = 0, n_id_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
             '       else \n\r' +
-            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, n_is_usermodi, d_fechacrea, d_fechamodi) \n\r' +
-            '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, 1, 1, now(), now()); \n\r' +
+            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+            '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -1083,6 +1084,7 @@ const saveProImg = (request, response) => {
     if (obj.estado) {
         let n_idpro_proyecto = request.body.n_idpro_proyecto
         let c_rutaimg = request.body.c_rutaimg;
+        let n_id_usermodi = request.body.n_id_usermodi;
         let cadena = 'update pro_proyecto set c_rutaimg= \'' + c_rutaimg + '\', n_id_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idpro_proyecto = \'' + n_idpro_proyecto + '\' ';
         pool.query(cadena,
             (error, results) => {
