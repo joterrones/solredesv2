@@ -171,11 +171,35 @@ const insertOrientacion = (request, response) => {
       }
     })
 }
+
+const buscarEstruct = (request, response) => {
+  var obj = valida.validaToken(request)
+  buscar = '%'+ request.body.c_nombre + '%';
+    if (obj.estado) {
+        pool.query('select pe.c_nombre, pe.c_codigo, pe.c_latitud, pe.c_longitud, l.n_idpl_linea, tpl.n_idpl_tipolinea, z.n_idpl_zona, z.n_idpro_proyecto from pl_estructura pe ' +
+            'inner join pl_linea l on pe.n_idpl_linea = l.n_idpl_linea and l.n_borrado = 0 ' +
+            'inner join pl_tipolinea tpl on tpl.n_idpl_tipolinea = l.n_idpl_tipolinea and tpl.n_borrado = 0 '+
+            'inner join pl_zona z on z.n_idpl_zona = l.n_idpl_zona and z.n_borrado = 0 ' +
+            'where pe.n_borrado = 0 and pe.n_version = $1 and tpl.n_idpl_tipolinea = $2 and z.n_idpro_proyecto = $3 and pe.c_nombre like \''+buscar+'\' ',
+            [request.body.n_version, request.body.n_idpl_tipolinea, request.body.n_idpro_proyecto],
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error al buscar.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
 module.exports = {
     get,
     getlineas,
     getdetalle,
     getestructura,
     buscarLinea,
-    insertOrientacion
+    insertOrientacion,
+    buscarEstruct
 }
