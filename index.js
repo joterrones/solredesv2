@@ -395,7 +395,11 @@ app.post('/api/mapa/getdetalle', dbMapa.getdetalle);
 app.post('/api/mapa/getestructura', dbMapa.getestructura);
 app.post('/api/mapa/buscarLinea', dbMapa.buscarLinea);
 app.post('/api/mapa/insertOrientacion', dbMapa.insertOrientacion); 
-app.post('/api/mapa/buscarEstruct', dbMapa.buscarEstruct);
+app.post('/api/mapa/buscarEstruct', dbMapa.buscarEstruct); 
+app.post('/api/mapa/getZona', dbMapa.getZona);
+app.post('/api/mapa/gettipolinea', dbMapa.gettipolinea);
+app.post('/api/mapa/getLinea', dbMapa.getLinea);
+app.post('/api/mapa/getestructura2', dbMapa.getestructura2);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)

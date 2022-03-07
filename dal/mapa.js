@@ -174,15 +174,19 @@ const insertOrientacion = (request, response) => {
 
 const buscarEstruct = (request, response) => {
   var obj = valida.validaToken(request)
+  let c_tipolinea =  request.body.c_tipolinea;
+  let c_zona = request.body.c_zona;
+  let c_linea = request.body.c_linea;
   buscar = '%'+ request.body.c_nombre + '%';
     if (obj.estado) {
         pool.query('select pe.c_nombre, pe.c_codigo, pe.c_latitud, pe.c_longitud, l.n_idpl_linea, tpl.n_idpl_tipolinea, z.n_idpl_zona, z.n_idpro_proyecto from pl_estructura pe ' +
             'inner join pl_linea l on pe.n_idpl_linea = l.n_idpl_linea and l.n_borrado = 0 ' +
             'inner join pl_tipolinea tpl on tpl.n_idpl_tipolinea = l.n_idpl_tipolinea and tpl.n_borrado = 0 '+
             'inner join pl_zona z on z.n_idpl_zona = l.n_idpl_zona and z.n_borrado = 0 ' +
-            'where pe.n_borrado = 0 and (pe.n_version = $1 or 0 = $1) and (tpl.n_idpl_tipolinea = $2 or 0 = $2) and (z.n_idpro_proyecto = $3 or 0 = $3) '+
-            'and (z.n_idpl_zona = $4 or 0 = $4) and pe.c_nombre like \''+buscar+'\' and (l.n_idpl_linea = $5 or 0 = $5)',
-            [request.body.n_version, request.body.n_idpl_tipolinea, request.body.n_idpro_proyecto, request.body.n_idpl_zona, request.body.n_idpl_linea],
+            'where pe.n_borrado = 0 and (pe.n_version = $1 or 0 = $1) and (tpl.c_nombre = \''+c_tipolinea+'\' or \'\' = \''+c_tipolinea+'\')  '+
+            'and (z.n_idpro_proyecto = $2) and (z.c_nombre = \''+c_zona+'\' or \'\' = \''+c_zona+'\') and pe.c_nombre like \''+buscar+'\'  '+
+            'and (l.c_nombre = \''+c_linea+'\' or \'\' = \''+c_linea+'\')',
+            [request.body.n_version, request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     console.log(error);
@@ -195,6 +199,105 @@ const buscarEstruct = (request, response) => {
         response.status(200).json(obj)
     }
 }
+
+const getZona = (request, response) => {
+
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+      pool.query('select count(z.c_nombre), z.c_nombre, z.n_idpro_proyecto from pl_estructura pe ' +
+            'inner join pl_linea pl on pe.n_idpl_linea = pl.n_idpl_linea and pl.n_borrado = 0 '+
+            'inner join pl_tipolinea tp on pl.n_idpl_tipolinea = tp.n_idpl_tipolinea and tp.n_borrado = 0 '+
+            'inner join pl_zona z on pl.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 '+
+            'where pe.n_borrado = 0 and pe.n_idpl_linea is not null and z.n_idpro_proyecto = $1 '+
+            'group by z.c_nombre, z.n_idpro_proyecto ',
+            [request.body.n_idpro_proyecto],
+          (error, results) => {
+
+              if (error) {
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error al traer Zonas!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const gettipolinea = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+      pool.query('select count(tp.c_nombre), tp.c_nombre from pl_estructura pe '+
+                'inner join pl_linea pl on pe.n_idpl_linea = pl.n_idpl_linea and pl.n_borrado = 0 '+
+                'inner join pl_tipolinea tp on pl.n_idpl_tipolinea = tp.n_idpl_tipolinea and tp.n_borrado = 0 '+
+                'inner join pl_zona z on pl.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 '+
+                'where pe.n_borrado = 0 and pe.n_idpl_linea is not null '+
+                'group by tp.c_nombre ',
+          (error, results) => {
+              if (error) {
+                  response.status(200).json({ estado: false, mensaje: "DB: error al traer TP!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const getLinea = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+
+      let cadena = 'select count(pl.c_nombre), pl.c_nombre from pl_estructura pe '+
+                'inner join pl_linea pl on pe.n_idpl_linea = pl.n_idpl_linea and pl.n_borrado = 0 '+ 
+                'inner join pl_tipolinea tp on pl.n_idpl_tipolinea = tp.n_idpl_tipolinea and tp.n_borrado = 0 '+ 
+                'inner join pl_zona z on pl.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 ' +
+                'where pe.n_borrado = 0 and pe.n_idpl_linea is not null and z.n_idpro_proyecto = $1 '+
+                'group by pl.c_nombre';
+      pool.query(cadena,
+          [request.body.n_idpro_proyecto],
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const getestructura2 = (request, response) => {
+
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+    let c_nombreLinea = request.body.c_nombreLinea;
+
+      let cadena = 'select count(pe.c_nombre), pe.c_nombre from pl_estructura pe '+
+              'inner join pl_linea pl on pe.n_idpl_linea = pl.n_idpl_linea and pl.n_borrado = 0 '+
+              'inner join pl_tipolinea tp on pl.n_idpl_tipolinea = tp.n_idpl_tipolinea and tp.n_borrado = 0 '+
+              'inner join pl_zona z on pl.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 '+
+              'where pe.n_borrado = 0 and pe.n_idpl_linea is not null and pl.c_nombre = \''+ c_nombreLinea +'\' '+
+              'group by pe.c_nombre' ;
+      pool.query(cadena,          
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
 module.exports = {
     get,
     getlineas,
@@ -202,5 +305,9 @@ module.exports = {
     getestructura,
     buscarLinea,
     insertOrientacion,
-    buscarEstruct
+    buscarEstruct,
+    getZona,
+    gettipolinea,
+    getLinea,
+    getestructura2
 }
