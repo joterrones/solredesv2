@@ -103,7 +103,7 @@ const insertplanilla = async (request, response) => {
                     element.TIPO_TRANS + '\',' +
                     element.CANTIDAD_TRANS + ',' +
                     element.FASES + ',' +
-                    element.ZONA + ',\'' +
+                    element.ZONA_UTM + ',\'' +
                     element.FUNCION_ARMADO + '\',' +
                     element.VERSION +
                     ','+ n_idpro_proyecto +')';

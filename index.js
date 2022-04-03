@@ -79,6 +79,7 @@ app.post('/api/configuracionGeneral/saveEmpresa',bdConfiguracionGeneral.saveEmpr
 app.post('/api/configuracionGeneral/deleteEmpresa',bdConfiguracionGeneral.deleteEmpresa)
 app.post('/api/configuracionGeneral/saveLinea',bdConfiguracionGeneral.saveLinea)
 app.post('/api/configuracionGeneral/getLinea',bdConfiguracionGeneral.getLinea)
+
 app.post('/api/configuracionGeneral/deleteLinea',bdConfiguracionGeneral.deleteLinea) 
 app.post('/api/configuracionGeneral/estadoLinea',bdConfiguracionGeneral.estadoLinea)
 app.post('/api/configuracionGeneral/gettipolinea',bdConfiguracionGeneral.gettipolinea) 
@@ -399,6 +400,7 @@ app.post('/api/mapa/buscarEstruct', dbMapa.buscarEstruct);
 app.post('/api/mapa/getZona', dbMapa.getZona);
 app.post('/api/mapa/gettipolinea', dbMapa.gettipolinea);
 app.post('/api/mapa/getLinea', dbMapa.getLinea);
+app.post('/api/mapa/getLineaFiltro',dbMapa.getLineaFiltro)
 app.post('/api/mapa/getestructura2', dbMapa.getestructura2);
 
 /* Movil */
