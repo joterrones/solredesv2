@@ -72,6 +72,7 @@ app.post('/api/seguridad/resetUserPro',dbSeguridad.resetUserPro)
 app.post('/api/seguridad/getPantallaRol',dbSeguridad.getPantallaRol) 
 app.post('/api/seguridad/getPantalla',dbSeguridad.getPantalla) 
 app.post('/api/seguridad/updatePantallaRol',dbSeguridad.updatePantallaRol)
+app.post('/api/seguridad/getDataUserPro',dbSeguridad.getDataUserPro)
 
 /*Configuracion General */
 app.post('/api/configuracionGeneral/getempresa',bdConfiguracionGeneral.getempresa)

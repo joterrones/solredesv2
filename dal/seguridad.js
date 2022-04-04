@@ -476,6 +476,28 @@ const updatePantallaRol = (request, response)=>{
     
 }
 
+const getDataUserPro = (request, response)=>{    
+    var obj = valida.validaToken(request);
+    if (obj.estado) {
+        let cadena = 'select u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, r.c_nombre, u.b_activo, p.c_nombre as c_proyecto from seg_userprofile u \n\r' +
+        'inner join pro_usuarioproyecto up on up.n_idseg_userprofile = u.n_idseg_userprofile and up.n_borrado = 0 \n\r' + 
+        'inner join pro_proyecto p on p.n_idpro_proyecto = up.n_idpro_proyecto and p.n_borrado = 0 \n\r' + 
+        'inner join seg_rol r on r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0 \n\r' + 
+        'where u.n_borrado = 0 and p.n_idpro_proyecto = $1 '  
+        pool.query(cadena,[request.body.n_idpro_proyecto],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {                    
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+    
+}
+
 module.exports = {
     login,
     get,
@@ -494,5 +516,6 @@ module.exports = {
     resetUserPro,
     getPantallaRol,
     getPantalla,
-    updatePantallaRol
+    updatePantallaRol,
+    getDataUserPro
 }
