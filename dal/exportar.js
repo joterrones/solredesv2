@@ -6,7 +6,7 @@ let pool = cnx.pool;
 const exportar= (request, response)=> {
     var obj = valida.validaToken(request)
     if(obj.estado){
-        console.log(request.body.n_idpro_proyecto, request.body.idversion, request.body.idzona, request.body.idtipolinea);
+        console.log(request.body.n_idpro_proyecto, request.body.idversion, request.body.idzona, request.body.idtipolinea, request.body.idlinea);
         let cadena = ' with poste as ( \n\r'+
                     'Select p.n_idpl_estructura, a.c_codigo, ea.n_cantidad from pl_armado a \n\r'+
                     'inner join pl_estructuraarmado ea on a.n_idpl_armado = ea.n_idpl_armado \n\r'+
@@ -156,17 +156,16 @@ const exportar= (request, response)=> {
                 'linea as ( \n\r'+
                     'select pe.n_idpl_estructura, pl.c_nombre, pe.c_nro_se, pe.c_circuito, pe.c_codigonodo, pa.c_codigo as codigoap, pa.c_codigo as c_codigoas,  \n\r'+
                     'pa.c_codigo as c_codigoarsse, pe.c_progresiva, pe.c_cota, pe.c_vertice, pe.c_angulo, pe.c_tipoterreno,  \n\r'+
-                    'pe.c_longitud, pe.c_latitud, pst.c_etiquetacorto, psta.n_cantidad as n_cantidadpsta, ea.n_orientacion,  \n\r'+
+                    'pe.c_longitud, pe.c_latitud, pst.c_etiquetacorto, pst.n_distancia as n_cantidadpsta, ea.n_orientacion,  \n\r'+
                     'pe.n_fases, pe.c_funcion  \n\r'+
                     'from pl_estructura pe  \n\r'+
                         'inner join pl_linea pl on pe.n_idpl_linea = pl.n_idpl_linea and pl.n_borrado = 0  \n\r'+
                         'inner join pl_tipolinea tp on pl.n_idpl_tipolinea = tp.n_idpl_tipolinea and tp.n_borrado = 0 \n\r'+
                         'inner join pl_estructuraarmado ea on pe.n_idpl_estructura = ea.n_idpl_estructura and ea.n_borrado = 0  \n\r'+
                         'inner join pl_armado pa on ea.n_idpl_armado = pa.n_idpl_armado and pa.n_borrado = 0  \n\r'+
-                        'inner join pl_subtramoarmado psta on pa.n_idpl_armado = psta.n_idpl_armado and psta.n_borrado = 0   \n\r'+
-                        'inner join pl_subtramo pst on psta.n_idpl_subtramo = pst.n_idpl_subtramo and pst.n_borrado = 0  \n\r'+
+                        'inner join pl_subtramo pst on pe.n_idpl_estructura = pst.n_idpl_estructurafin and pst.n_borrado = 0  \n\r'+
                         'inner join pl_zona zn on pl.n_idpl_zona = zn.n_idpl_zona and zn.n_borrado = 0   \n\r'+
-                        'where pe.n_borrado = 0 and pa.n_idpro_proyecto = $1 and zn.n_idpro_proyecto = $1 and pe.n_version = $2 and zn.n_idpl_zona = $3 and tp.n_idpl_tipolinea = $4 \n\r'+
+                        'where pe.n_borrado = 0 and pa.n_idpro_proyecto = $1 and zn.n_idpro_proyecto = $1 and pe.n_version = $2 and zn.n_idpl_zona = $3 and tp.n_idpl_tipolinea = $4 and pl.n_idpl_linea = $5\n\r'+
                         'order by pl.c_nombre asc  \n\r'+
                 ')  \n\r'+
                 'Select p.n_idpl_estructura, a35.n_cantidad as amortiguador_35, a37.n_cantidad as amortiguador_37,  \n\r'+
@@ -201,7 +200,7 @@ const exportar= (request, response)=> {
                 'left outer join AP_BT  on e.n_idpl_estructura = AP_BT.n_idpl_estructura \n\r'+
                 'left outer join AP_MT  on e.n_idpl_estructura = AP_MT.n_idpl_estructura \n\r'+
                 'inner join linea l on e.n_idpl_estructura = l.n_idpl_estructura \n\r';
-                pool.query(cadena,[request.body.n_idpro_proyecto, request.body.idversion, request.body.idzona, request.body.idtipolinea],(error, results)=>{
+                pool.query(cadena,[request.body.n_idpro_proyecto, request.body.idversion, request.body.idzona, request.body.idtipolinea, request.body.idlinea],(error, results)=>{
                     if(error){
                         console.log(error)
                         response.status(200).json({ estado: false, mensaje: "DB: error al traer los datos2!.", data: null })   
