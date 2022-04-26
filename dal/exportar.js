@@ -206,6 +206,7 @@ const exportar= (request, response)=> {
                 'left outer join AP_MT  on e.n_idpl_estructura = AP_MT.n_idpl_estructura \n\r'+
                 'inner join estruct_anterior ea  on e.n_idpl_estructura = ea.n_idpl_estructurafin \n\r'+
                 'inner join linea l on e.n_idpl_estructura = l.n_idpl_estructura \n\r';
+                'order by p.n_idpl_estructura asc, l.n_idpl_estructuraarmado asc \n\r';
                 pool.query(cadena,[request.body.n_idpro_proyecto, request.body.idversion, request.body.idzona, request.body.idtipolinea, request.body.idlinea],(error, results)=>{
                     if(error){
                         console.log(error)
