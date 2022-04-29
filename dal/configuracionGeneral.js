@@ -79,6 +79,11 @@ const deleteEmpresa = (request, response) => {
 const getLinea = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
+
+        let expedienteAux = '';
+        let replanteoAux = '';
+        let montajeAux = '';
+        let cierreAux = '';
         
         let estadoSelectb_expediente = request.body.estadoSelectb_expediente;
         let estadoSelectb_replanteo = request.body.estadoSelectb_replanteo;
@@ -90,12 +95,21 @@ const getLinea = (request, response) => {
         if(estadoSelectb_montaje == null){ estadoSelectb_montaje = 'null'; }
         if(estadoSelectb_cierre == null){ estadoSelectb_cierre = 'null'; }
 
+        if(estadoSelectb_expediente == false){ expedienteAux = ' or l.b_expediente is null '; }
+        if(estadoSelectb_replanteo == false){ replanteoAux = ' or l.b_replanteo is null '; }
+        if(estadoSelectb_montaje == false){ montajeAux = ' or l.b_montaje is null '; }
+        if(estadoSelectb_cierre == false){ cierreAux = ' or l.b_cierre is null '; }
+
         let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, l.n_idpl_tipolinea, l.n_idpl_zona,tp.c_nombre as c_nombret, zn.c_nombre as c_nombrez, l.b_expediente, l.b_replanteo, l.b_montaje,l.b_cierre from pl_linea as l  \n\r' +
             'left join pl_tipolinea tp on tp.n_idpl_tipolinea = l.n_idpl_tipolinea \n\r' +
             'left join pl_zona zn on zn.n_idpl_zona = l.n_idpl_zona and zn.n_borrado = 0\n\r' +
             'inner join pro_proyecto pro on pro.n_idpro_proyecto = zn.n_idpro_proyecto \n\r' +
-            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2) and (zn.n_idpro_proyecto = $3 or 0 = $3) and ( l.b_expediente is '+estadoSelectb_expediente+' or null is '+estadoSelectb_expediente+' ) and ( l.b_replanteo is '+estadoSelectb_replanteo+' or null is '+estadoSelectb_replanteo+') and (l.b_montaje is '+estadoSelectb_montaje+' or null is '+estadoSelectb_montaje+') and (l.b_cierre is '+estadoSelectb_cierre+' or null is '+estadoSelectb_cierre+') \n\r' +
-            'ORDER BY c_nombrez asc,l.c_codigo asc, c_nombret asc, l.d_fechamodi asc'
+            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2) and (zn.n_idpro_proyecto = $3 or 0 = $3) \n\r' +
+            'and ( l.b_expediente is '+estadoSelectb_expediente+' or null is '+estadoSelectb_expediente+' '+expedienteAux+') \n\r' +
+            'and ( l.b_replanteo is '+estadoSelectb_replanteo+' or null is '+estadoSelectb_replanteo+' '+replanteoAux+') \n\r' +
+            'and (l.b_montaje is '+estadoSelectb_montaje+' or null is '+estadoSelectb_montaje+' '+montajeAux+')  \n\r' +
+            'and (l.b_cierre is '+estadoSelectb_cierre+' or null is '+estadoSelectb_cierre+' '+cierreAux+') \n\r' +
+            'ORDER BY c_nombrez asc,l.c_codigo asc, c_nombret asc, l.d_fechamodi asc ';
         pool.query(cadena,
             [request.body.n_idpl_tipolinea, request.body.n_idpl_zona, request.body.n_idpro_proyecto],
             (error, results) => {
