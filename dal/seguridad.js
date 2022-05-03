@@ -372,31 +372,27 @@ const resetUserPro = (request, response) => {
 const saveUserPro = (request, response)=>{
     
     var obj = valida.validaToken(request)
-    let n_idpro_proyecto = request.body.n_idpro_proyecto;
+    let n_idpro_proyectoarray = request.body.n_idpro_proyectoarray;
     let n_idseg_userprofile = request.body.n_idseg_userprofile;
     let n_id_usermodi = request.body.n_id_usermodi;
     
     if (obj.estado) {
+
+        n_idpro_proyectoarray.forEach( async n_idpro_proyecto => {
+            let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idseg_userprofile, n_idpro_proyecto from pro_usuarioproyecto where n_idpro_proyecto = '+ n_idpro_proyecto +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
+                '           update pro_usuarioproyecto set n_borrado = 0, n_is_usermodi = '+n_id_usermodi+' where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+            await pool.query(cadena);
+        });
         
-        let cadena = 'do $$ \n\r' +
-            '   begin \n\r' +
-            '       if(exists(select n_idseg_userprofile, n_idpro_proyecto from pro_usuarioproyecto where n_idpro_proyecto = '+ n_idpro_proyecto +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
-            '           update pro_usuarioproyecto set n_borrado = 0, n_is_usermodi = '+n_id_usermodi+' where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
-            '       else \n\r' +
-            '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
-            '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, '+n_id_usermodi+', now()); \n\r' +
-            '       end if; \n\r' +
-            '   end \n\r' +
-            '$$';
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
+        
     } else {
         response.status(200).json(obj)
     }
@@ -483,7 +479,8 @@ const getDataUserPro = (request, response)=>{
         'inner join pro_usuarioproyecto up on up.n_idseg_userprofile = u.n_idseg_userprofile and up.n_borrado = 0 \n\r' + 
         'inner join pro_proyecto p on p.n_idpro_proyecto = up.n_idpro_proyecto and p.n_borrado = 0 \n\r' + 
         'inner join seg_rol r on r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0 \n\r' + 
-        'where u.n_borrado = 0 and p.n_idpro_proyecto = $1 '  
+        'where u.n_borrado = 0 and p.n_idpro_proyecto = $1 \n\r' +   
+        'order by u.c_nombre1 asc, u.c_appaterno asc, u.c_apmaterno asc, p.c_nombre asc ';
         pool.query(cadena,[request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
