@@ -835,29 +835,26 @@ const resetProUser = (request, response) => {
 const saveProUser = (request, response) => {
 
     var obj = valida.validaToken(request)
-    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+    let n_idseg_userprofileArray = request.body.n_idseg_userprofileArray;
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
+
     if (obj.estado) {
-        let cadena = 'do $$ \n\r' +
+
+        n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {
+            let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
-            '           update tra_grupousuario set b_activo = true, n_id_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+            '           update tra_grupousuario set b_activo = true, n_is_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
             '       else \n\r' +
             '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
             '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
+            await pool.query(cadena)
+        });
+        
     } else {
         response.status(200).json(obj)
     }
