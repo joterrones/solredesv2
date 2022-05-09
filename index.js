@@ -282,10 +282,14 @@ app.post('/api/armado/getconfigtipomontaje', dbArmado.getconfigtipomontaje)
 app.post('/api/armado/insertarmadoconfigmontaje', dbArmado.insertarmadoconfigmontaje) 
 app.post('/api/armado/uploadfile', function (req, res) {
   let archivo = req.query.archivo;
-  let rutaCorta =  archivo+"/Documentos/";
+  let rutaCorta = archivo+"/Documentos/";
   let dir = __dirname.replace('\dal', '') + ruta+"/"+rutaCorta;
   let c_nombre = req.query.extension;
 
+  if (!fs.existsSync( __dirname.replace('\dal', '')+ruta+"/"+archivo)) {    
+    fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+archivo, 0744);
+  }
+  
   if (!fs.existsSync(dir)) {    
     fs.mkdirSync(dir, 0744);
   }
