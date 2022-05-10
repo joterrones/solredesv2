@@ -55,6 +55,28 @@ const get = (request, response) => {
         response.status(200).json(obj)
     }
 }
+const getUserSinAsignacion = (request, response) => {
+    var obj = valida.validaToken(request)    
+    if (obj.estado) {
+        let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, u.b_activo,r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u  \n\r' +
+            'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0  \n\r' +            
+            'left join pro_usuarioproyecto up on up.n_idseg_userprofile = u.n_idseg_userprofile and up.n_borrado = 0 \n\r' +
+            'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1) and up.n_idpro_proyecto is null \n\r' +
+            'order by r.c_nombre asc'
+        pool.query(cadena,
+            [request.body.n_idseg_rol],
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
 
 const validarDatos = (request, response) => {
     
@@ -507,6 +529,7 @@ const getDataUserPro = (request, response)=>{
 module.exports = {
     login,
     get,
+    getUserSinAsignacion,
     getrole,
     getRolUser,
     validarDatos,
