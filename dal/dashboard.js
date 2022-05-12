@@ -9,9 +9,9 @@ const getLineas = (request, response) => {
     if(obj.estado){
        let n_idpro_proyecto = request.body.n_idpro_proyecto;
         pool.query('select  pl.c_codigo, count(ple.c_nombre) as n_cantidad from pl_linea as pl '+
-        'inner join  pl_estructura ple on ple.n_idpl_linea = pl.n_idpl_linea '+
-        'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona '+
-        'where pl.n_borrado = 0 and ple.n_borrado = 0 and pz.n_idpro_proyecto = $1 '+        
+        'inner join  pl_estructura ple on ple.n_idpl_linea = pl.n_idpl_linea and ple.n_borrado = 0'+
+        'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona and pz.n_borrado = 0'+
+        'where  pz.n_idpro_proyecto = $1 and pl.n_borrado = 0 '+        
         'group by pl.c_codigo',
         [n_idpro_proyecto],
         (error, results) => {
@@ -100,35 +100,39 @@ const getLineas = (request, response) => {
 
                                                 let cadena = 'with expediente as ( '+
                                                                 'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_expediente)as expediente from pl_tipolinea tl '+
-                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_expediente is true '+
+                                                                'inner join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_expediente is true '+
+                                                                'inner join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+'  '+
                                                                 'where tl.n_borrado = 0  '+
                                                                 'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
                                                             '), '+
                                                             'replanteo as ( '+
                                                                 'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_replanteo)as replanteo from pl_tipolinea tl '+
-                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_replanteo is true '+
+                                                                'inner join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_replanteo is true '+
+                                                                'inner join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+'  '+
                                                                 'where tl.n_borrado = 0  '+
                                                                 'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
                                                             '), '+
                                                             'montaje as ( '+
                                                                 'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_montaje)as montaje from pl_tipolinea tl '+
-                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_montaje is true '+
+                                                                'inner join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_montaje is true '+
+                                                                'inner join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+'  '+
                                                                 'where tl.n_borrado = 0  '+
                                                                 'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
                                                             '), '+
                                                             'cierre as ( '+
                                                                 'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.b_cierre)as cierre from pl_tipolinea tl '+
-                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_cierre is true '+
+                                                                'inner join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 and l.b_cierre is true '+
+                                                                'inner join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+'  '+
                                                                 'where tl.n_borrado = 0  '+
                                                                 'group by  tl.n_idpl_tipolinea, tl.c_nombre '+
                                                             ') '+
                                                             'select tl.n_idpl_tipolinea, tl.c_nombre, count(l.n_idpl_tipolinea)as total, e.expediente, r.replanteo, m.montaje, c.cierre,z.n_idpro_proyecto from pl_tipolinea tl '+
-                                                                'left join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 '+
+                                                                'inner join pl_linea l on tl.n_idpl_tipolinea = l.n_idpl_tipolinea and l.n_borrado = 0 '+
                                                                 'left join expediente e on tl.n_idpl_tipolinea = e.n_idpl_tipolinea '+
                                                                 'left join replanteo r on tl.n_idpl_tipolinea = r.n_idpl_tipolinea '+
                                                                 'left join montaje m on tl.n_idpl_tipolinea = m.n_idpl_tipolinea '+
                                                                 'left join cierre c on tl.n_idpl_tipolinea = c.n_idpl_tipolinea '+
-                                                                'left join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+' '+
+                                                                'inner join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0 and z.n_idpro_proyecto = '+n_idpro_proyecto+' '+
                                                                 'where tl.n_borrado = 0 '+
                                                                 'group by  tl.n_idpl_tipolinea, tl.c_nombre, e.expediente, r.replanteo, m.montaje, c.cierre, z.n_idpro_proyecto ';
                                                 

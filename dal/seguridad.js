@@ -38,13 +38,36 @@ const get = (request, response) => {
     var obj = valida.validaToken(request)    
     if (obj.estado) {
         let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, u.b_activo,r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u  \n\r' +
-            'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol \n\r' +            
-            'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1) ' +
+            'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0  \n\r' +            
+            'left join pro_usuarioproyecto up on up.n_idseg_userprofile = u.n_idseg_userprofile and up.n_borrado = 0 \n\r' +
+            'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1) and up.n_idpro_proyecto = $2' +
+            'order by r.c_nombre asc'
+        pool.query(cadena,
+            [request.body.n_idseg_rol, request.body.n_idpro_proyecto],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+const getUserSinAsignacion = (request, response) => {
+    var obj = valida.validaToken(request)    
+    if (obj.estado) {
+        let cadena = 'Select u.n_idseg_userprofile, u.c_username, u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, u.b_activo,r.n_idseg_rol, r.c_nombre, u.c_clave, u.n_id_usermodi from seg_userprofile as u  \n\r' +
+            'left join seg_rol r on r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0  \n\r' +            
+            'left join pro_usuarioproyecto up on up.n_idseg_userprofile = u.n_idseg_userprofile and up.n_borrado = 0 \n\r' +
+            'where u.n_borrado = 0 and (u.n_idseg_rol = $1 or 0 = $1) and up.n_idpro_proyecto is null \n\r' +
             'order by r.c_nombre asc'
         pool.query(cadena,
             [request.body.n_idseg_rol],
             (error, results) => {
                 if (error) {
+                    console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })    
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
@@ -89,14 +112,21 @@ const saveUser = (request, response) => {
         let n_idseg_userprofile = request.body.n_idseg_userprofile;
         let n_idseg_rol = request.body.n_idseg_rol;
         let n_id_usermodi = request.body.n_id_usermodi;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
+        
         console.log("SAVE",n_id_usermodi);
         let cadena = 'do $$ \n\r' +
+            'declare new_n_idseg_userprofile int; \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and n_idseg_userprofile =\'' + n_idseg_userprofile + '\')) then \n\r' +
             '           update seg_userprofile set c_nombre1= \'' + c_nombre1 + '\',c_nombre2= \'' + c_nombre2 + '\', c_appaterno=\'' + c_appaterno + '\', c_apmaterno=\'' + c_apmaterno + '\', c_dni=\'' + c_dni + '\', n_idseg_rol=' + n_idseg_rol +',c_username=\'' + c_username + '\', n_id_usermodi='+n_id_usermodi+', d_fechamodi= now() where n_idseg_userprofile =\'' + n_idseg_userprofile + '\'; \n\r' +
             '       else \n\r' +
             '           insert into seg_userprofile(n_idseg_userprofile,c_username,c_clave,c_nombre1,c_nombre2,c_appaterno,c_apmaterno,c_dni,b_activo,n_idseg_rol,n_borrado,d_fechacrea,n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_username + '\',\'' + c_clave + '\',\'' + c_nombre1 + '\',\'' + c_nombre2 + '\',\'' + c_appaterno + '\',\'' + c_apmaterno + '\',\'' + c_dni + '\',true, '+ n_idseg_rol +', 0,now(),'+n_id_usermodi+'); \n\r' +
+            '           values (default,\'' + c_username + '\',\'' + c_clave + '\',\'' + c_nombre1 + '\',\'' + c_nombre2 + '\',\'' + c_appaterno + '\',\'' + c_apmaterno + '\',\'' + c_dni + '\',true, '+ n_idseg_rol +', 0,now(),'+n_id_usermodi+') \n\r' +
+            '           RETURNING n_idseg_userprofile into new_n_idseg_userprofile; \n\r' +    
+
+            '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+            '           VALUES (default, new_n_idseg_userprofile, '+ n_idpro_proyecto +', 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -107,9 +137,10 @@ const saveUser = (request, response) => {
                     console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
                 } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                    response.status(200).json({ estado: true, mensaje: "", data: null })
                 }
-            })
+            });
+        
     } else {
         response.status(200).json(obj)
     }
@@ -372,31 +403,27 @@ const resetUserPro = (request, response) => {
 const saveUserPro = (request, response)=>{
     
     var obj = valida.validaToken(request)
-    let n_idpro_proyecto = request.body.n_idpro_proyecto;
+    let n_idpro_proyectoarray = request.body.n_idpro_proyectoarray;
     let n_idseg_userprofile = request.body.n_idseg_userprofile;
     let n_id_usermodi = request.body.n_id_usermodi;
     
     if (obj.estado) {
+
+        n_idpro_proyectoarray.forEach( async n_idpro_proyecto => {
+            let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idseg_userprofile, n_idpro_proyecto from pro_usuarioproyecto where n_idpro_proyecto = '+ n_idpro_proyecto +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
+                '           update pro_usuarioproyecto set n_borrado = 0, n_is_usermodi = '+n_id_usermodi+' where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+            await pool.query(cadena);
+        });
         
-        let cadena = 'do $$ \n\r' +
-            '   begin \n\r' +
-            '       if(exists(select n_idseg_userprofile, n_idpro_proyecto from pro_usuarioproyecto where n_idpro_proyecto = '+ n_idpro_proyecto +' and n_idseg_userprofile = '+ n_idseg_userprofile +')) then \n\r' +
-            '           update pro_usuarioproyecto set n_borrado = 0, n_is_usermodi = '+n_id_usermodi+' where n_idseg_userprofile = '+ n_idseg_userprofile +' and n_idpro_proyecto = '+ n_idpro_proyecto +'; \n\r' +
-            '       else \n\r' +
-            '           INSERT INTO pro_usuarioproyecto(n_idpro_usuarioproyecto, n_idseg_userprofile, n_idpro_proyecto, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
-            '           VALUES (default, '+ n_idseg_userprofile +', '+ n_idpro_proyecto +', 0, '+n_id_usermodi+', now()); \n\r' +
-            '       end if; \n\r' +
-            '   end \n\r' +
-            '$$';
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
+        
     } else {
         response.status(200).json(obj)
     }
@@ -476,9 +503,33 @@ const updatePantallaRol = (request, response)=>{
     
 }
 
+const getDataUserPro = (request, response)=>{    
+    var obj = valida.validaToken(request);
+    if (obj.estado) {
+        let cadena = 'select u.c_nombre1, u.c_nombre2, u.c_appaterno, u.c_apmaterno, u.c_dni, r.c_nombre, u.b_activo, p.c_nombre as c_proyecto from seg_userprofile u \n\r' +
+        'inner join pro_usuarioproyecto up on up.n_idseg_userprofile = u.n_idseg_userprofile and up.n_borrado = 0 \n\r' + 
+        'inner join pro_proyecto p on p.n_idpro_proyecto = up.n_idpro_proyecto and p.n_borrado = 0 \n\r' + 
+        'inner join seg_rol r on r.n_idseg_rol = u.n_idseg_rol and r.n_borrado = 0 \n\r' + 
+        'where u.n_borrado = 0 and p.n_idpro_proyecto = $1 \n\r' +   
+        'order by u.c_nombre1 asc, u.c_appaterno asc, u.c_apmaterno asc, p.c_nombre asc ';
+        pool.query(cadena,[request.body.n_idpro_proyecto],
+            (error, results) => {
+                if (error) {
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {                    
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+    
+}
+
 module.exports = {
     login,
     get,
+    getUserSinAsignacion,
     getrole,
     getRolUser,
     validarDatos,
@@ -494,5 +545,6 @@ module.exports = {
     resetUserPro,
     getPantallaRol,
     getPantalla,
-    updatePantallaRol
+    updatePantallaRol,
+    getDataUserPro
 }

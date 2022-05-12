@@ -56,6 +56,7 @@ app.use('/archivos', express.static(__dirname + ruta));
 /* Seguridad */
 app.post('/api/seguridad/login', dbSeguridad.login)
 app.post('/api/seguridad/get', dbSeguridad.get)
+app.post('/api/seguridad/getUserSinAsignacion',dbSeguridad.getUserSinAsignacion)
 app.post('/api/seguridad/getrole', dbSeguridad.getrole) 
 app.post('/api/seguridad/getRolUser', dbSeguridad.getRolUser)
 app.post('/api/seguridad/validarDatos', dbSeguridad.validarDatos)
@@ -72,6 +73,7 @@ app.post('/api/seguridad/resetUserPro',dbSeguridad.resetUserPro)
 app.post('/api/seguridad/getPantallaRol',dbSeguridad.getPantallaRol) 
 app.post('/api/seguridad/getPantalla',dbSeguridad.getPantalla) 
 app.post('/api/seguridad/updatePantallaRol',dbSeguridad.updatePantallaRol)
+app.post('/api/seguridad/getDataUserPro',dbSeguridad.getDataUserPro) 
 
 /*Configuracion General */
 app.post('/api/configuracionGeneral/getempresa',bdConfiguracionGeneral.getempresa)
@@ -185,6 +187,11 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
   let dir = __dirname.replace('\dal', '') + ruta+rutaCorta;
   let c_nombre = req.query.extension;
 
+  if (!fs.existsSync( __dirname.replace('\dal', '')+ruta+"/"+detalleguia)) {    
+    fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+detalleguia, 0744);
+    fs.mkdirSync(dir, 0744);
+  }
+
   if (!fs.existsSync(dir)) {
     
     fs.mkdirSync(dir, 0744);
@@ -193,7 +200,7 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
   req.query.c_ruta = dir;
   req.query.c_nombre = c_nombre;
   dir = dir + '' + c_nombre;
-  rutaCorta = rutaCorta + '' + c_nombre;
+  //rutaCorta = rutaCorta + '' + c_nombre;
 
   console.log("Ruta",dir);
   console.log("nombre",c_nombre);
@@ -201,7 +208,19 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
     if (err) {
       res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
     } else {
-      res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: rutaCorta, c_nombreImg: c_nombre  })
+      checksum.file(dir, function (err, sum) {        
+        console.log("Ruta check: ",dir);
+        console.log(sum);
+        nuevoNombreArchivo = __dirname.replace('\dal', '')+ruta+"/"+rutaCorta+sum+path.extname(c_nombre);
+        console.log("nuevoNombreArchivo: "+nuevoNombreArchivo);
+        fs.rename(dir, nuevoNombreArchivo, function(err) {
+          if ( err ) console.log('ERROR: ' + err);
+        });
+        newRuta = rutaCorta+sum+path.extname(c_nombre);
+        res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: newRuta, c_nombre: c_nombre, c_checksum: sum+path.extname(c_nombre) });
+        console.log("ERror",err)
+      })
+      //res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: rutaCorta, c_nombreImg: c_nombre  })
     }
   });
 }) 
@@ -281,10 +300,14 @@ app.post('/api/armado/getconfigtipomontaje', dbArmado.getconfigtipomontaje)
 app.post('/api/armado/insertarmadoconfigmontaje', dbArmado.insertarmadoconfigmontaje) 
 app.post('/api/armado/uploadfile', function (req, res) {
   let archivo = req.query.archivo;
-  let rutaCorta =  archivo+"/Documentos/";
+  let rutaCorta = archivo+"/Documentos/";
   let dir = __dirname.replace('\dal', '') + ruta+"/"+rutaCorta;
   let c_nombre = req.query.extension;
 
+  if (!fs.existsSync( __dirname.replace('\dal', '')+ruta+"/"+archivo)) {    
+    fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+archivo, 0744);
+  }
+  
   if (!fs.existsSync(dir)) {    
     fs.mkdirSync(dir, 0744);
   }

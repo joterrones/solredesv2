@@ -79,6 +79,11 @@ const deleteEmpresa = (request, response) => {
 const getLinea = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
+
+        let expedienteAux = '';
+        let replanteoAux = '';
+        let montajeAux = '';
+        let cierreAux = '';
         
         let estadoSelectb_expediente = request.body.estadoSelectb_expediente;
         let estadoSelectb_replanteo = request.body.estadoSelectb_replanteo;
@@ -90,12 +95,21 @@ const getLinea = (request, response) => {
         if(estadoSelectb_montaje == null){ estadoSelectb_montaje = 'null'; }
         if(estadoSelectb_cierre == null){ estadoSelectb_cierre = 'null'; }
 
+        if(estadoSelectb_expediente == false){ expedienteAux = ' or l.b_expediente is null '; }
+        if(estadoSelectb_replanteo == false){ replanteoAux = ' or l.b_replanteo is null '; }
+        if(estadoSelectb_montaje == false){ montajeAux = ' or l.b_montaje is null '; }
+        if(estadoSelectb_cierre == false){ cierreAux = ' or l.b_cierre is null '; }
+
         let cadena = 'Select l.n_idpl_linea, l.c_nombre, l.c_codigo, l.n_idpl_tipolinea, l.n_idpl_zona,tp.c_nombre as c_nombret, zn.c_nombre as c_nombrez, l.b_expediente, l.b_replanteo, l.b_montaje,l.b_cierre from pl_linea as l  \n\r' +
             'left join pl_tipolinea tp on tp.n_idpl_tipolinea = l.n_idpl_tipolinea \n\r' +
             'left join pl_zona zn on zn.n_idpl_zona = l.n_idpl_zona and zn.n_borrado = 0\n\r' +
             'inner join pro_proyecto pro on pro.n_idpro_proyecto = zn.n_idpro_proyecto \n\r' +
-            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2) and (zn.n_idpro_proyecto = $3 or 0 = $3) and ( l.b_expediente is '+estadoSelectb_expediente+' or null is '+estadoSelectb_expediente+' ) and ( l.b_replanteo is '+estadoSelectb_replanteo+' or null is '+estadoSelectb_replanteo+') and (l.b_montaje is '+estadoSelectb_montaje+' or null is '+estadoSelectb_montaje+') and (l.b_cierre is '+estadoSelectb_cierre+' or null is '+estadoSelectb_cierre+') \n\r' +
-            'ORDER BY c_nombrez asc,l.c_codigo asc, c_nombret asc, l.d_fechamodi asc'
+            'where l.n_borrado = 0 and (l.n_idpl_tipolinea = $1 or 0 = $1) and (l.n_idpl_zona = $2 or 0 = $2) and (zn.n_idpro_proyecto = $3 or 0 = $3) \n\r' +
+            'and ( l.b_expediente is '+estadoSelectb_expediente+' or null is '+estadoSelectb_expediente+' '+expedienteAux+') \n\r' +
+            'and ( l.b_replanteo is '+estadoSelectb_replanteo+' or null is '+estadoSelectb_replanteo+' '+replanteoAux+') \n\r' +
+            'and (l.b_montaje is '+estadoSelectb_montaje+' or null is '+estadoSelectb_montaje+' '+montajeAux+')  \n\r' +
+            'and (l.b_cierre is '+estadoSelectb_cierre+' or null is '+estadoSelectb_cierre+' '+cierreAux+') \n\r' +
+            'ORDER BY c_nombrez asc,l.c_codigo asc, c_nombret asc, l.d_fechamodi asc ';
         pool.query(cadena,
             [request.body.n_idpl_tipolinea, request.body.n_idpl_zona, request.body.n_idpro_proyecto],
             (error, results) => {
@@ -625,11 +639,13 @@ const deleteTipoEmpresa = (request, response) => {
     var obj = valida.validaToken(request)
     let n_idgen_tipoempresa = request.body.n_idgen_tipoempresa;
     let n_id_usermodi = request.body.n_id_usermodi;
+    console.log(n_id_usermodi);
     if (obj.estado) {
-        pool.query('update gen_tipoempresa set n_borrado=1, n_id_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idgen_tipoempresa=' + n_idgen_tipoempresa + ' ',
+        pool.query('update gen_tipoempresa set n_borrado=1, n_is_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idgen_tipoempresa=' + n_idgen_tipoempresa,
 
             (error, results) => {
                 if (error) {
+                    console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
@@ -821,29 +837,26 @@ const resetProUser = (request, response) => {
 const saveProUser = (request, response) => {
 
     var obj = valida.validaToken(request)
-    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+    let n_idseg_userprofileArray = request.body.n_idseg_userprofileArray;
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
+
     if (obj.estado) {
-        let cadena = 'do $$ \n\r' +
+
+        n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {
+            let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
-            '           update tra_grupousuario set b_activo = true, n_id_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+            '           update tra_grupousuario set b_activo = true, n_is_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
             '       else \n\r' +
             '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
             '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
+            await pool.query(cadena)
+        });
+        
     } else {
         response.status(200).json(obj)
     }
@@ -949,6 +962,7 @@ const getTipoElemento = (request, response) => {
             'where n_borrado = 0 order by div asc, div2 asc',
             (error, results) => {
                 if (error) {
+                    console.log(error);
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
                 } else {
                     response.status(200).json({ estado: true, mensaje: "", data: results.rows })
@@ -1013,7 +1027,7 @@ const deleteTipoElemento = (request, response) => {
 const getTablaCateTipoMontaje = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('select n_idmon_categoriatipomontaje, c_nombre, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2 from mon_categoriatipomontaje ' +
+        pool.query('select n_idmon_categoriatipomontaje, c_nombre, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2, n_idpro_proyecto from mon_categoriatipomontaje ' +
             ' where n_borrado = 0 and n_idpro_proyecto= $1 order by div asc, div2 asc',
             [request.body.n_idpro_proyecto],
             (error, results) => {
@@ -1035,14 +1049,15 @@ const saveCateTipoMontaje = (request, response) => {
         let c_nombre = request.body.c_nombre;
         let c_codigo = request.body.c_codigo;
         let n_id_usermodi = request.body.n_id_usermodi;
+        let n_idpro_proyecto = request.body.n_idpro_proyecto;
 
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
-            '       if(exists(select n_idmon_categoriatipomontaje from mon_categoriatipomontaje where n_idmon_categoriatipomontaje = \'' + n_idmon_categoriatipomontaje + '\')) then \n\r' +
+            '       if(exists(select n_idmon_categoriatipomontaje from mon_categoriatipomontaje where n_idmon_categoriatipomontaje = \'' + n_idmon_categoriatipomontaje + '\' and n_idpro_proyecto = '+n_idpro_proyecto+')) then \n\r' +
             '           update mon_categoriatipomontaje set c_nombre= \'' + c_nombre + '\', c_codigo=\'' + c_codigo + '\', n_id_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idmon_categoriatipomontaje = \'' + n_idmon_categoriatipomontaje + '\' ; \n\r' +
             '       else \n\r' +
-            '           insert into mon_categoriatipomontaje(n_idmon_categoriatipomontaje, c_nombre,c_codigo, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
-            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\', 0,now(), ' + n_id_usermodi + '); \n\r' +
+            '           insert into mon_categoriatipomontaje(n_idmon_categoriatipomontaje, c_nombre,c_codigo, n_idpro_proyecto ,n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_nombre + '\',\'' + c_codigo + '\', '+n_idpro_proyecto+',0,now(), ' + n_id_usermodi + '); \n\r' +
             '       end if; \n\r' +
             '   end \n\r' +
             '$$';
@@ -1085,7 +1100,7 @@ const saveProImg = (request, response) => {
         let n_idpro_proyecto = request.body.n_idpro_proyecto
         let c_rutaimg = request.body.c_rutaimg;
         let n_id_usermodi = request.body.n_id_usermodi;
-        let cadena = 'update pro_proyecto set c_rutaimg= \'' + c_rutaimg + '\', n_id_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idpro_proyecto = \'' + n_idpro_proyecto + '\' ';
+        let cadena = 'update pro_proyecto set c_rutaimg= \'' + c_rutaimg + '\', n_is_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idpro_proyecto = \'' + n_idpro_proyecto + '\' ';
         pool.query(cadena,
             (error, results) => {
                 if (error) {
