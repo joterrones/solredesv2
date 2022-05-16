@@ -933,7 +933,7 @@ const asignarLineaUser = (request, response) => {
         let cadena = 'do $$ \n\r' +
             '   begin \n\r' +
             '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
-            '           update tra_grupolinea set n_borrado = 0, n_id_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+            '           update tra_grupolinea set n_borrado = 0, n_is_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
             '       else \n\r' +
             '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
             '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, '+n_id_usermodi+', now()); \n\r' +
