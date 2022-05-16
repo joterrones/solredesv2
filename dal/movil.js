@@ -8,7 +8,7 @@ const guardarfoto = (request, response) => {
         let proyecto = request.query.proyecto;
         let base64Str = request.body.c_file.replace("\/", "/");
         var base64Data = base64Str.replace(/^data:image\/png;base64,/, "");
-        let dir = __dirname.replace('\dal', '')+ruta+ "/inspeccion/";
+        let dir = __dirname.replace('\dal', '') + ruta + "/inspeccion/";
         let patshort = request.body.c_nombre.substr(0, 2);
 
         dir = dir + patshort;
@@ -31,9 +31,9 @@ const guardarfoto = (request, response) => {
 }
 
 const guardardatos = async (request, response) => {
-    console.log("request.body",request.body);
+    console.log("request.body", request.body);
     let inspecciones = request.body.inspecciones;
-    console.log("inspecciones",inspecciones);
+    console.log("inspecciones", inspecciones);
     let resultados = [];
     let cadena_inspeccion = '';
     let resultado;
@@ -42,18 +42,18 @@ const guardardatos = async (request, response) => {
             let queryExisteInspeccion = await pool.query('Select n_idmon_inspeccion from mon_inspeccion where c_codigo = $1 and n_borrado=0', [element.c_codigo]);
             if (queryExisteInspeccion.rowCount == 0) {
 
-                if(!element.n_altitud){
+                if (!element.n_altitud) {
                     element.n_altitud = 0;
                 }
 
-                if(!element.n_precision){
+                if (!element.n_precision) {
                     element.n_precision = 0;
                 }
 
                 cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_borrado,n_id_usercrea,d_fechacrea) values ' +
                     '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),0,' + element.n_id_usuario + ',now()) returning *';
-                    console.log("cadena_inspeccion",cadena_inspeccion);
-                    let insertInspeccion = await pool.query(cadena_inspeccion);
+                console.log("cadena_inspeccion", cadena_inspeccion);
+                let insertInspeccion = await pool.query(cadena_inspeccion);
                 if (insertInspeccion.rowCount > 0) {
                     if (element.vanos.length > 0) {
                         let cadena_vano = 'insert into mon_inspeccionvano(n_idmon_inspeccionvano,c_codigoinicio,c_codigofin,n_borrado,n_id_usercrea,d_fechacrea) values ';
@@ -95,11 +95,11 @@ const guardardatos = async (request, response) => {
                 }
 
                 //borrar
-               /* resultado = {
-                    c_codigo: element.c_codigo,
-                    b_flag: true,
-                    c_mensaje: "Registro guardado"
-                };*/
+                /* resultado = {
+                     c_codigo: element.c_codigo,
+                     b_flag: true,
+                     c_mensaje: "Registro guardado"
+                 };*/
             } else {
                 resultado = {
                     c_codigo: element.c_codigo,
@@ -116,7 +116,7 @@ const guardardatos = async (request, response) => {
         }
         resultados.push(resultado);
         if (inspecciones.length <= resultados.length) {
-            response.status(200).json({inspecciones:resultados});
+            response.status(200).json({ inspecciones: resultados });
         }
     });
 
@@ -124,30 +124,33 @@ const guardardatos = async (request, response) => {
 
 
 
-const getusuario = (request, response) => {
-    pool.query('select n_idseg_userprofile n_ID_Usuario,c_username c_Usuario,c_nombre1 c_Nombre1,coalesce(c_nombre2,\'\') c_Nombre2,c_appaterno c_ApPaterno,c_apmaterno c_ApMaterno,c_nombre1||	\' \'||c_appaterno||\' \'||c_apmaterno c_NombreCompleto,c_clave c_PasswordMovil from seg_userprofile where n_borrado = 0', (error, results) => {
-        if (error) {
-            response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos del armado!.", data: null })
-        } else {
-            response.status(200).json(results.rows)
-        }
+const getusuario =async (request, response) => {
+    let queryUsuario =await pool.query('select n_idseg_userprofile n_ID_Usuario,c_username c_Usuario,c_nombre1 c_Nombre1,coalesce(c_nombre2,\'\') c_Nombre2,c_appaterno c_ApPaterno,c_apmaterno c_ApMaterno,c_nombre1||	\' \'||c_appaterno||\' \'||c_apmaterno c_NombreCompleto,c_clave c_PasswordMovil from seg_userprofile where n_borrado = 0');
+    let queryProyecto =await pool.query('select p.n_idpro_proyecto, p.c_nombre, up.n_idseg_userprofile from pro_proyecto p '+
+    'inner join pro_usuarioproyecto up on p.n_idpro_proyecto = up.n_idpro_proyecto and up.n_borrado = 0 '+
+    'where p.n_borrado = 0');
+
+    response.status(200).json({
+        usuarios: queryUsuario.rows,
+        proyectos: queryProyecto.rows
     })
 }
 
 const getlinea = async (request, response) => {
 
     let queryLinea = await pool.query('Select l.n_idpl_linea, l.c_codigo, l.c_nombre, l.n_idpl_tipolinea, l.n_idpl_zona,false b_flag from pl_linea l ' +
-        'inner join tra_grupolinea gl on l.n_idpl_linea=gl.n_idpl_linea and gl.n_borrado = 0 ' +
+    'inner join pl_zona z on l.n_idpl_zona = z.n_idpl_zona and z.n_borrado = 0    '+
+    'inner join tra_grupolinea gl on l.n_idpl_linea=gl.n_idpl_linea and gl.n_borrado = 0 ' +
         'inner join tra_grupousuario gu on gl.n_idtra_grupo=gu.n_idtra_grupo and gu.n_borrado = 0 ' +
         'where l.n_borrado = 0 ' +
-        'and gu.n_idseg_userprofile = $1', [request.query.n_idseg_userprofile]);
+        'and gu.n_idseg_userprofile = $1 and z.n_idpro_proyecto = $2', [request.query.n_idseg_userprofile,request.query.n_idpro_proyecto]);
 
     let queryTipoArmado = await pool.query('select n_idpl_tipoarmado,c_codigo,c_nombre, coalesce(b_angulo,false) b_angulo, coalesce(n_orden,0) n_orden from pl_tipoarmado ta ' +
         'where n_borrado = 0 ' +
         'and b_movil = true');
 
     let queryArmado = await pool.query('Select n_idpl_armado,n_idpl_tipoarmado,c_codigo,c_nombre, coalesce(c_iconomapa,\'\') c_iconomapa from pl_armado a ' +
-        'where a.n_borrado = 0 and n_version = 4');
+        'where a.n_borrado = 0 and n_version = 4  and n_idpro_proyecto = $1', [request.query.n_idpro_proyecto]);
 
     let queryTipoFoto = await pool.query('select n_idgen_tipofoto,c_codigo,c_nombre,n_tipo,coalesce(b_foto, false)b_foto,coalesce(b_requerido,false)b_requerido from gen_tipofoto ' +
         'where n_tipo=10');
@@ -155,8 +158,35 @@ const getlinea = async (request, response) => {
     let queryObservacion = await pool.query('select n_idgen_observacion,c_codigo,c_descripcion,n_idpl_tipoarmado from gen_observacion ' +
         'where n_borrado = 0');
 
-    response.status(200).json({ lineas: queryLinea.rows, tipoarmados: queryTipoArmado.rows, armados: queryArmado.rows, fotos: queryTipoFoto.rows, observaciones: queryObservacion.rows })
+    let queryElemento = await pool.query('select e.n_idpl_elemento, e.c_codigo, e.c_nombre, e.n_precio, e.c_unidadmedida, e.n_idpl_tipoelemento, e.n_idpl_tipolinea, e.n_idpro_proyecto from pl_elemento e ' +
+        'inner join pl_tipoelemento te on e.n_idpl_tipoelemento = te.n_idpl_tipoelemento and te.n_borrado = 0 ' +
+        'where e.n_borrado = 0 and te.n_idpro_proyecto = $1', [request.query.n_idpro_proyecto]);
+
+    let queryTipoElemento = await pool.query('select n_idpl_tipoelemento, c_codigo, c_nombre, n_idpl_tipolinea from pl_tipoelemento where n_borrado = 0 and n_idpro_proyecto = $1', [request.query.n_idpro_proyecto]);
+
+    let queryAlmacen = await pool.query('select n_idalm_almacen, c_nombre,c_direccion from alm_almacen where n_borrado = 0 and n_idpro_proyecto = $1', [request.query.n_idpro_proyecto]);
+
+    let queryPeriodo = await pool.query('select n_idgen_periodo,c_descripcion from gen_periodo where n_borrado = 0');
+
+    let queryTipoLinea = await pool.query('select n_idpl_tipolinea, c_nombre from pl_tipolinea where n_borrado = 0');
+
+    response.status(200).json({
+        lineas: queryLinea.rows,
+        tipoarmados: queryTipoArmado.rows,
+        armados: queryArmado.rows,
+        fotos: queryTipoFoto.rows,
+        observaciones: queryObservacion.rows,
+        elementos: queryElemento.rows,
+        tiposElemento: queryTipoElemento.rows,
+        almacenes: queryAlmacen.rows,
+        periodos: queryPeriodo.rows,
+        tiposLinea: queryTipoLinea.rows
+    })
 }
+
+
+
+
 
 const getdato = async (request, response) => {
 
@@ -200,5 +230,4 @@ module.exports = {
     getdato,
     guardardatos,
     guardarfoto
-
 }
