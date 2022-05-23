@@ -41,10 +41,10 @@ const get = (request, response) => {
     if (request.body.n_idpl_estructura == null) {
       request.body.n_idpl_estructura == 0
     }
-  
+
     pool.query('select a.c_codigo,a.c_nombre,ea.n_idpl_estructuraarmado, ea.n_cantidad, coalesce(ea.n_orientacion,0) n_orientacion from pl_armado a '+
     'inner join pl_estructuraarmado ea on a.n_idpl_armado = ea.n_idpl_armado and ea.n_borrado = 0 '+
-    'where a.n_borrado = 0 and ea.n_idpl_estructura = $1 order by a.c_nombre asc',
+    'where a.n_borrado = 0 and ea.n_idpl_estructura = $1 and a.c_codigo != \''+''+'\' and a.c_codigo != \''+'undefined'+'\' order by a.c_nombre asc',
       [request.body.n_idpl_estructura]
       , (error, results) => {
         if (error) {
