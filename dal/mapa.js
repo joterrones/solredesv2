@@ -56,6 +56,26 @@ const get = (request, response) => {
       })
   }
 
+  const getdetallemon = (request, response) => {
+    if (request.body.n_idmon_inspeccion == null) {
+      request.body.n_idmon_inspeccion == 0
+    }
+
+    pool.query('select m.c_codigo as c_codigomon, a.c_codigo as c_codigoar, mdtll.n_cantidad, mdtll.n_orientacion from mon_inspeccion m ' +
+    'inner join mon_inspecciondetalle mdtll on mdtll.n_idmon_inspeccion = m.n_idmon_inspeccion and mdtll.n_borrado = 0 '+
+    'inner join pl_armado a on a.n_idpl_armado = mdtll.n_idpl_armado and a.n_borrado = 0 '+
+    'where m.n_idmon_inspeccion = $1',
+      [request.body.n_idmon_inspeccion]
+      , (error, results) => {
+        if (error) {
+          console.log(error);
+          response.status(200).json({ estado: false, mensaje: "ocurrio un error al traer los datos para el mapa!.", data: null })
+        } else {
+          response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+        }
+      })
+  }
+
   
 const getlineas = (request, response) => {
 
@@ -324,6 +344,7 @@ module.exports = {
     get,
     getlineas,
     getdetalle,
+    getdetallemon,
     getestructura,
     buscarLinea,
     insertOrientacion,

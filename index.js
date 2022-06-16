@@ -416,6 +416,7 @@ app.get("/api/importacion/downloadPlantillaRedes", (req, res) => {
 app.post('/api/mapa/get', dbMapa.get);
 app.post('/api/mapa/getlineas', dbMapa.getlineas);
 app.post('/api/mapa/getdetalle', dbMapa.getdetalle); 
+app.post('/api/mapa/getdetallemon', dbMapa.getdetallemon); 
 app.post('/api/mapa/getestructura', dbMapa.getestructura);
 app.post('/api/mapa/buscarLinea', dbMapa.buscarLinea);
 app.post('/api/mapa/insertOrientacion', dbMapa.insertOrientacion); 
