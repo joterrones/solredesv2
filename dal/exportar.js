@@ -162,7 +162,7 @@ const exportar= (request, response)=> {
                         'inner join pl_linea pl on pe.n_idpl_linea = pl.n_idpl_linea and pl.n_borrado = 0  \n\r'+
                         'inner join pl_estructuraarmado ea on pe.n_idpl_estructura = ea.n_idpl_estructura and ea.n_borrado = 0  \n\r'+
                         'inner join pl_armado pa on ea.n_idpl_armado = pa.n_idpl_armado and pa.n_borrado = 0 \n\r'+
-						'inner join pl_subtramo pst on pe.n_idpl_estructura = pst.n_idpl_estructurafin or pe.n_idpl_estructura = pst.n_idpl_estructurainicio  and pst.n_borrado = 0    \n\r'+
+						'inner join pl_subtramo pst on pe.n_idpl_estructura = pst.n_idpl_estructurafin /*or pe.n_idpl_estructura = pst.n_idpl_estructurainicio*/  and pst.n_borrado = 0  \n\r'+
                         'where pe.n_borrado = 0 and pa.n_idpl_tipoarmado = 2 and pe.n_idpl_tipoestructura = 9 \n\r'+
                         'order by pe.n_idpl_estructura asc, ea.n_idpl_estructuraarmado asc \n\r'+
                 '),  \n\r'+
