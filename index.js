@@ -433,6 +433,9 @@ app.get('/api/movil/getlinea', dbMovil.getlinea)
 app.get('/api/movil/getdato', dbMovil.getdato)
 app.post('/api/movil/guardardatos', dbMovil.guardardatos)
 app.post('/api/movil/guardarfoto', dbMovil.guardarfoto)
+app.post('/api/movil/guardardatosalmacen', dbMovil.guardardatosalmacen)
+app.post('/api/movil/guardarfotoalmacen', dbMovil.guardarfotoalmacen)
+
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
