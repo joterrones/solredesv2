@@ -77,42 +77,54 @@ const guardardatos = async (request, response) => {
                     element.n_precision = 0;
                 }
 
-                cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_borrado,n_id_usercrea,d_fechacrea) values ' +
-                    '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),0,' + element.n_id_usuario + ',now()) returning *';
+                cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_idpl_linea,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                    '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),'+element.n_idpl_linea+',0,' + element.n_id_usuario + ',now()) returning *';
                 console.log("cadena_inspeccion", cadena_inspeccion);
                 let insertInspeccion = await pool.query(cadena_inspeccion);
                 if (insertInspeccion.rowCount > 0) {
-                    if (element.vanos.length > 0) {
-                        let cadena_vano = 'insert into mon_inspeccionvano(n_idmon_inspeccionvano,c_codigoinicio,c_codigofin,n_borrado,n_id_usercrea,d_fechacrea) values ';
-                        element.vanos.forEach(vano => {
-                            cadena_vano = cadena_vano + '(default,\'' + vano.c_codigoinicio + '\',\'' + vano.c_codigofin + '\'' + ',0,' + element.n_id_usuario + ',now()),';
-                        });
-                        cadena_vano = cadena_vano.substr(0, cadena_vano.length - 1) + ' returning *';
-                        await pool.query(cadena_vano)
+
+                    if (element.vanos) {
+                        if (element.vanos.length > 0) {
+                            let cadena_vano = 'insert into mon_inspeccionvano(n_idmon_inspeccionvano,c_codigoinicio,c_codigofin,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                            element.vanos.forEach(vano => {
+                                cadena_vano = cadena_vano + '(default,\'' + vano.c_codigoinicio + '\',\'' + vano.c_codigofin + '\'' + ',0,' + element.n_id_usuario + ',now()),';
+                            });
+                            cadena_vano = cadena_vano.substr(0, cadena_vano.length - 1) + ' returning *';
+                            await pool.query(cadena_vano)
+                        }
                     }
-                    if (element.detalles.length > 0) {
-                        let cadena_detalle = '';
-                        await element.detalles.forEach(async detalle => {
-                            cadena_detalle = 'insert into mon_inspecciondetalle(n_idmon_inspecciondetalle,n_idmon_inspeccion,n_idpl_armado,n_cantidad,b_adicional,b_eliminado,c_observacion,n_orientacion,n_borrado,n_id_usercrea,d_fechacrea) values ' +
-                                '(default,' + insertInspeccion.rows[0].n_idmon_inspeccion + ',' + detalle.n_idpl_armado + ',' + detalle.n_cantidad + ',' + detalle.b_adicional + ',' + detalle.b_eliminado + ',\'' + detalle.c_observacion + '\',' + detalle.n_orientacion + ',0,' + element.n_id_usuario + ',now()) returning *';
-                            let insertDetalle = await pool.query(cadena_detalle);
-                            if (detalle.observaciones.length > 0) {
-                                let cadena_observacion = 'insert into mon_inspeccionobservacion(n_idmon_inspeccionobservacion,n_idmon_inspecciondetalle,n_idgen_observacion,n_borrado,n_id_usercrea,d_fechacrea) values ';
-                                detalle.observaciones.forEach(observacion => {
-                                    cadena_observacion = cadena_observacion + '(default,' + insertDetalle.rows[0].n_idmon_inspecciondetalle + ',' + observacion.n_idgen_observacion + ',0,' + element.n_id_usuario + ',now()),';
-                                });
-                                cadena_observacion = cadena_observacion.substr(0, cadena_observacion.length - 1) + ' returning *';
-                                let insertObservacion = await pool.query(cadena_observacion)
-                            }
-                            if (detalle.fotos.length > 0) {
-                                let cadena_fotos = 'insert into mon_inspecciondetallefoto(n_idmon_inspecciondetallefoto,n_idmon_inspecciondetalle,c_nombre,n_idgen_tipofoto,b_estado,n_borrado,n_id_usercrea,d_fechacrea) values ';
-                                detalle.fotos.forEach(foto => {
-                                    cadena_fotos = cadena_fotos + '(default,' + insertDetalle.rows[0].n_idmon_inspecciondetalle + ',\'' + foto.c_nombre + '\',' + foto.n_idgen_tipofoto + ',false,0,' + element.n_id_usuario + ',now()),';
-                                });
-                                cadena_fotos = cadena_fotos.substr(0, cadena_fotos.length - 1) + ' returning *';
-                                let insertFoto = await pool.query(cadena_fotos);
-                            }
-                        });
+
+                    if (element.detallesInspeccion) {
+                        if (element.detallesInspeccion.length > 0) {
+                            let cadena_detalle = '';
+                            await element.detallesInspeccion.forEach(async detalle => {
+                                cadena_detalle = 'insert into mon_inspecciondetalle(n_idmon_inspecciondetalle,n_idmon_inspeccion,n_idpl_armado,n_cantidad,b_adicional,b_eliminado,c_observacion,n_orientacion,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                                    '(default,' + insertInspeccion.rows[0].n_idmon_inspeccion + ',' + detalle.n_idpl_armado + ',' + detalle.n_cantidad + ',' + detalle.b_adicional + ',' + detalle.b_eliminado + ',\'' + detalle.c_observacion + '\',' + detalle.n_orientacion + ',0,' + element.n_id_usuario + ',now()) returning *';
+                                let insertDetalle = await pool.query(cadena_detalle);
+
+                                if (detalle.observacionesInspeccion) {
+                                    if (detalle.observacionesInspeccion.length > 0) {
+                                        let cadena_observacion = 'insert into mon_inspeccionobservacion(n_idmon_inspeccionobservacion,n_idmon_inspecciondetalle,n_idgen_observacion,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                                        detalle.observacionesInspeccion.forEach(observacion => {
+                                            cadena_observacion = cadena_observacion + '(default,' + insertDetalle.rows[0].n_idmon_inspecciondetalle + ',' + observacion.n_idgen_observacion + ',0,' + element.n_id_usuario + ',now()),';
+                                        });
+                                        cadena_observacion = cadena_observacion.substr(0, cadena_observacion.length - 1) + ' returning *';
+                                        let insertObservacion = await pool.query(cadena_observacion)
+                                    }
+                                }
+
+                                if (detalle.fotos) {
+                                    if (detalle.fotos.length > 0) {
+                                        let cadena_fotos = 'insert into mon_inspecciondetallefoto(n_idmon_inspecciondetallefoto,n_idmon_inspecciondetalle,c_nombre,n_idgen_tipofoto,b_estado,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                                        detalle.fotos.forEach(foto => {
+                                            cadena_fotos = cadena_fotos + '(default,' + insertDetalle.rows[0].n_idmon_inspecciondetalle + ',\'' + foto.c_nombre + '\',' + foto.n_tipofoto + ',false,0,' + element.n_id_usuario + ',now()),';
+                                        });
+                                        cadena_fotos = cadena_fotos.substr(0, cadena_fotos.length - 1) + ' returning *';
+                                        let insertFoto = await pool.query(cadena_fotos);
+                                    }
+                                }
+                            });
+                        }
                     }
                     resultado = {
                         c_codigo: element.c_codigo,
@@ -151,65 +163,65 @@ const guardardatosalmacen = async (request, response) => {
     let resultado;
     guias.forEach(async element => {
         try {
-           /* let queryExisteGuia = await pool.query('Select n_idalm_guia from alm_guia where c_codigo = $1 and n_borrado=0', [element.c_codigo]);
-            if (queryExisteGuia.rowCount == 0) {*/
+            /* let queryExisteGuia = await pool.query('Select n_idalm_guia from alm_guia where c_codigo = $1 and n_borrado=0', [element.c_codigo]);
+             if (queryExisteGuia.rowCount == 0) {*/
 
-                if (!element.n_altitud) {
-                    element.n_altitud = 0;
-                }
+            if (!element.n_altitud) {
+                element.n_altitud = 0;
+            }
 
-                if (!element.n_precision) {
-                    element.n_precision = 0;
-                }
+            if (!element.n_precision) {
+                element.n_precision = 0;
+            }
 
-                cadena_guia = 'insert into alm_guia(n_idalm_guia,n_idalm_almacen,c_nombre,c_direccion,n_idgen_periodo,c_nroguia,c_ruc,c_observacion,b_aprobar,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_borrado,n_id_usercrea,d_fechacrea) values ' +
-                    '(default,' 
-                    + element.n_idalm_almacen + ',\'' 
-                    + element.c_nombre + '\',\'' 
-                    + element.c_direccion + '\',' 
-                    + element.n_idgen_periodo + ',\'' 
-                    + element.c_nroguia + '\',\'' 
-                    + element.c_ruc + '\',\'' 
-                    + element.c_observacion 
-                    + '\',false,\'' 
-                    + element.c_latitud + '\',\'' 
-                    + element.c_longitud + '\',' 
-                    + element.n_precision + ',' 
-                    + element.n_altitud 
-                    + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),0,' 
-                    + element.n_id_usuario 
-                    + ',now()) returning *';
+            cadena_guia = 'insert into alm_guia(n_idalm_guia,n_idalm_almacen,c_nombre,c_direccion,n_idgen_periodo,c_nroguia,c_ruc,c_observacion,b_aprobar,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                '(default,'
+                + element.n_idalm_almacen + ',\''
+                + element.c_nombre + '\',\''
+                + element.c_direccion + '\','
+                + element.n_idgen_periodo + ',\''
+                + element.c_nroguia + '\',\''
+                + element.c_ruc + '\',\''
+                + element.c_observacion
+                + '\',false,\''
+                + element.c_latitud + '\',\''
+                + element.c_longitud + '\','
+                + element.n_precision + ','
+                + element.n_altitud
+                + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),0,'
+                + element.n_id_usuario
+                + ',now()) returning *';
 
-                console.log("cadena_guia", cadena_guia);
-                let insertguia= await pool.query(cadena_guia);
-                if (insertguia.rowCount > 0) {
-                    if (element.detalleguia != null && element.detallesguia.length > 0) {
-                        let cadena_detallesguia = 'insert into alm_detalleguia(n_idalm_detalleguia,n_idalm_guia, n_idpl_elemento, n_cantidad ,n_borrado,n_id_usercrea,d_fechacrea) values ';
-                        element.detallesguia.forEach(detalleguia => {
-                            cadena_detallesguia = cadena_detallesguia + '(default,' 
-                            + insertguia.rows[0].n_idalm_guia  + ',' 
-                            + detalleguia.n_idpl_elemento + ',' 
-                            + detalleguia.n_cantidad + ',' 
-                            + ',0,' 
-                            + element.n_id_usuario 
+            console.log("cadena_guia", cadena_guia);
+            let insertguia = await pool.query(cadena_guia);
+            if (insertguia.rowCount > 0) {
+                if (element.detalleguia != null && element.detallesguia.length > 0) {
+                    let cadena_detallesguia = 'insert into alm_detalleguia(n_idalm_detalleguia,n_idalm_guia, n_idpl_elemento, n_cantidad ,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                    element.detallesguia.forEach(detalleguia => {
+                        cadena_detallesguia = cadena_detallesguia + '(default,'
+                            + insertguia.rows[0].n_idalm_guia + ','
+                            + detalleguia.n_idpl_elemento + ','
+                            + detalleguia.n_cantidad + ','
+                            + ',0,'
+                            + element.n_id_usuario
                             + ',now()),';
-                        });
-                        cadena_detallesguia = cadena_detallesguia.substr(0, cadena_detallesguia.length - 1) + ' returning *';
-                        await pool.query(cadena_detallesguia)
-                    }
-                    resultado = {
-                        c_codigo: element.c_codigo,
-                        n_estado: 1,
-                        c_mensaje: "Registro guardado"
-                    };
+                    });
+                    cadena_detallesguia = cadena_detallesguia.substr(0, cadena_detallesguia.length - 1) + ' returning *';
+                    await pool.query(cadena_detallesguia)
                 }
-         /*   } else {
                 resultado = {
                     c_codigo: element.c_codigo,
-                    n_estado: 0,
-                    c_mensaje: "El registro ya existe"
+                    n_estado: 1,
+                    c_mensaje: "Registro guardado"
                 };
-            }*/
+            }
+            /*   } else {
+                   resultado = {
+                       c_codigo: element.c_codigo,
+                       n_estado: 0,
+                       c_mensaje: "El registro ya existe"
+                   };
+               }*/
         } catch (error) {
             resultado = {
                 c_codigo: element.c_codigo,
