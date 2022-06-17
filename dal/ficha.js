@@ -11,7 +11,7 @@ const get = (request, response)=>{
     if (obj.estado) {        
         let cadena = 'select ins.c_codigo, ins.c_latitud, ins.c_longitud, ins.n_precision, ins.n_altitud, ins.d_fecha, ins.n_id_usercrea,	ins.n_idpl_linea, ins.n_idpl_linea,ins.c_codigoestructura, ins.c_codigoede,'+	
             'us.c_username, us.c_nombre1, us.c_nombre2, us.c_appaterno, us.c_apmaterno, '+
-            'pl.c_nombre, tf.c_nombre as nfoto, '+
+            'pl.c_nombre, tf.c_nombre as nfoto, dfot.c_nombre as nfotodetalle, '+
             'plar.n_idpl_armado, plar.c_codigo as c_codigoarmado, plar.c_nombre as c_nombrearmado, plar.c_rutaimg, det.n_cantidad, det.n_orientacion, det.c_observacion, /*det.c_rutafoto,*/ gobs.c_descripcion as c_observacion2  '+
             'from mon_inspeccion ins \n\r' +
             'inner join seg_userprofile us on us.n_idseg_userprofile = ins.n_id_usercrea \n\r' +    
