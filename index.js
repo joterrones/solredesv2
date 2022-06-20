@@ -452,6 +452,7 @@ app.post('/api/dashboard/getLineas', dbDashboard.getLineas)
 
 /*Ficha */
 app.post('/api/ficha/get', dbFicha.get)
+app.post('/api/ficha/getFoto', dbFicha.getFoto)
 
 /*Exportar*/
 app.post('/api/exportar/exportar', dbExportar.exportar)
