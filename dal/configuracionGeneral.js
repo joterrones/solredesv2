@@ -960,7 +960,8 @@ const getTipoElemento = (request, response) => {
     if (obj.estado) {
 
         pool.query('select n_idpl_tipoelemento, c_nombre, c_codigo, split_part(c_codigo,\'_\',1) as div, split_part(c_codigo,\'_\',2)::DECIMAL as div2 from pl_tipoelemento  ' +
-            'where n_borrado = 0 order by div asc, div2 asc',
+            'where n_borrado = 0 and n_idpro_proyecto = $1 order by div asc, div2 asc',
+            [request.body.n_idpro_proyecto],
             (error, results) => {
                 if (error) {
                     console.log(error);
