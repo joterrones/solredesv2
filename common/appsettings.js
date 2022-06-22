@@ -5,11 +5,7 @@ const pool = new Pool({
   database: 'SOL_REDES-V2_3',
   password: '123',
   port: 5432
-  /*user: 'postgres',
-  host: 'localhost',
-  database: 'bdsol7.5',
-  password: '1234',
-  port: 5432*/
+
 
 })
 

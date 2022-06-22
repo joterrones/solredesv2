@@ -76,9 +76,11 @@ const guardardatos = async (request, response) => {
                 if (!element.n_precision) {
                     element.n_precision = 0;
                 }
+                
+                element.nmodulo= element.n_modulo?0:element.n_modulo;
 
-                cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_idpl_linea,n_borrado,n_id_usercrea,d_fechacrea) values ' +
-                    '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),'+element.n_idpl_linea+',0,' + element.n_id_usuario + ',now()) returning *';
+                cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_idpl_linea,n_tipoapp,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                    '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),'+element.n_idpl_linea+','+element.n_modulo+',0,' + element.n_id_usuario + ',now()) returning *';
                 console.log("cadena_inspeccion", cadena_inspeccion);
                 let insertInspeccion = await pool.query(cadena_inspeccion);
                 if (insertInspeccion.rowCount > 0) {
