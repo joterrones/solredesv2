@@ -16,7 +16,7 @@ const get = (request, response) => {
     let stringBuscar = '%'+ request.body.stringBuscar+'%';
     pool.query('SELECT a.n_idpl_armado,a.c_codigo,a.c_nombre,a.c_codigo_corto,a.c_iconomapa,a.c_rutaimg,a.n_idpl_tipoarmado,a.b_especial,a.n_version, ta.c_codigo as c_codigotipoarmado,a.n_idpro_proyecto,a.c_nombrelamina FROM pl_armado a  '+
     'inner join pl_tipoarmado ta on a.n_idpl_tipoarmado = ta.n_idpl_tipoarmado and ta.n_borrado = 0 '+
-    'where a.n_borrado = 0 and (a.n_idpl_tipoarmado=$1 or 0=$1) and (a.n_version=$2 or 0=$2) and a.n_idpro_proyecto = $3 and a.c_codigo like \''+stringBuscar+'\' '+
+    'where a.n_borrado = 0 and (a.n_idpl_tipoarmado=$1 or 0=$1) and (a.n_version=$2 or 0=$2) and a.n_idpro_proyecto = $3 and (a.c_codigo like \''+stringBuscar+'\' or a.c_nombre like \''+stringBuscar+'\') '+
     'order by ta.c_codigo asc, a.c_codigo asc', 
     [request.body.n_idpl_tipoarmado,request.body.n_version, request.body.n_idpro_proyecto],(error, results) => {
       if (error) {
