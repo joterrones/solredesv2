@@ -724,11 +724,22 @@ const deleteValorGnr = (request, response) => {
 
 const getTraGrupos = (request, response) => {
     var obj = valida.validaToken(request)
+    let stringBuscar = '%'+ request.body.stringBuscar+'%';
     if (obj.estado) {
 
-        let cadena = 'select gr.n_idtra_grupo, gr.n_idpro_proyecto, gr.c_nombre from tra_grupo gr \n\r' +
-            'inner join pro_proyecto pro on pro.n_idpro_proyecto = gr.n_idpro_proyecto  \n\r' +
-            'where gr.n_borrado = 0 and (gr.n_idpro_proyecto = $1 or 0 = $1)'
+        let cadena = 'with redes as (\n\r'+
+                        'select gr.n_idtra_grupo, count(grl.n_borrado) as nredes from tra_grupo gr\n\r'+
+                                'inner join pro_proyecto pro on pro.n_idpro_proyecto = gr.n_idpro_proyecto   \n\r'+
+                                'left outer join tra_grupolinea grl on grl.n_idtra_grupo = gr.n_idtra_grupo and grl.n_borrado = 0 \n\r'+
+                                'where gr.n_borrado = 0 and (gr.n_idpro_proyecto = $1) \n\r'+
+                                'group by gr.n_idtra_grupo \n\r'+
+                    ') \n\r'+
+                    'select gr.n_idtra_grupo, gr.n_idpro_proyecto, gr.c_nombre, count(tra.b_activo) as nusersactivo, r.nredes from tra_grupo gr \n\r'+
+                                'inner join pro_proyecto pro on pro.n_idpro_proyecto = gr.n_idpro_proyecto  \n\r'+
+                                'left outer join tra_grupousuario tra on tra.n_idtra_grupo = gr.n_idtra_grupo and tra.b_activo is true \n\r'+
+                                'left outer join redes r on r.n_idtra_grupo = gr.n_idtra_grupo \n\r'+
+                                'where gr.n_borrado = 0 and (gr.n_idpro_proyecto = $1) and gr.c_nombre like \''+stringBuscar+'\' \n\r'+
+                                'group by gr.n_idtra_grupo, gr.n_idpro_proyecto, gr.c_nombre,r.nredes '
         pool.query(cadena,
             [request.body.n_idpro_proyecto],
             (error, results) => {
@@ -840,23 +851,30 @@ const saveProUser = (request, response) => {
     let n_idseg_userprofileArray = request.body.n_idseg_userprofileArray;
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
-
+    let i = 0;
     if (obj.estado) {
 
         n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {
-            let cadena = 'do $$ \n\r' +
-            '   begin \n\r' +
-            '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
-            '           update tra_grupousuario set b_activo = true, n_is_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
-            '       else \n\r' +
-            '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
-            '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
-            '       end if; \n\r' +
-            '   end \n\r' +
-            '$$';
-            await pool.query(cadena)
+            try {
+                let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
+                '           update tra_grupousuario set b_activo = true, n_is_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+                i++
+                await pool.query(cadena)
+            } catch (error) {
+                
+            }
         });
-        
+        if (n_idseg_userprofileArray.length <= i) {
+            response.status(200).json({ estado: true, mensaje: "", data: null })
+        }
     } else {
         response.status(200).json(obj)
     }
@@ -893,29 +911,33 @@ const noAsignarLineaUser = (request, response) => {
     var obj = valida.validaToken(request)
     console.log(request.body.n_idpl_linea);
     console.log(request.body.n_idtra_grupo);
-    let n_idpl_linea = request.body.n_idpl_linea;
+    let arr_n_idpl_linea = request.body.n_idpl_linea;
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
+    let i = 0;
+    
     if (obj.estado) {
-        let cadena = 'do $$ \n\r' +
-            '   begin \n\r' +
-            '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
-            '           update tra_grupolinea set n_borrado = 1, n_is_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
-            '       else \n\r' +
-            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
-            '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, '+n_id_usermodi+', now()); \n\r' +
-            '       end if; \n\r' +
-            '   end \n\r' +
-            '$$';
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
+        arr_n_idpl_linea.forEach(async id_linea => {
+            try {
+                let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + id_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
+                '           update tra_grupolinea set n_borrado = 1, n_is_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + id_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, ' + id_linea + ', ' + n_idtra_grupo + ', 1, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+                i++;
+                await pool.query(cadena)
+            } catch (error) {
+                
+            }
+        });
+        if (arr_n_idpl_linea.length <= i) {
+            response.status(200).json({ estado: true, mensaje: "", data: null })
+        }
     } else {
         response.status(200).json(obj)
     }
@@ -926,29 +948,33 @@ const asignarLineaUser = (request, response) => {
     var obj = valida.validaToken(request)
     console.log(request.body.n_idpl_linea);
     console.log(request.body.n_idtra_grupo);
-    let n_idpl_linea = request.body.n_idpl_linea;
+    let arr_n_idpl_linea = request.body.n_idpl_linea;
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
+    let i = 0;
     if (obj.estado) {
-        let cadena = 'do $$ \n\r' +
-            '   begin \n\r' +
-            '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
-            '           update tra_grupolinea set n_borrado = 0, n_is_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + n_idpl_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
-            '       else \n\r' +
-            '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
-            '           VALUES (default, ' + n_idpl_linea + ', ' + n_idtra_grupo + ', 0, '+n_id_usermodi+', now()); \n\r' +
-            '       end if; \n\r' +
-            '   end \n\r' +
-            '$$';
-        pool.query(cadena,
-            (error, results) => {
-                if (error) {
-                    console.log(error);
-                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
-                } else {
-                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-                }
-            })
+        arr_n_idpl_linea.forEach(async id_linea => {
+            try {
+                let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idtra_grupo, n_idpl_linea from tra_grupolinea where n_idpl_linea =' + id_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + ')) then \n\r' +
+                '           update tra_grupolinea set n_borrado = 0, n_is_usermodi ='+n_id_usermodi+' where n_idpl_linea =' + id_linea + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO tra_grupolinea(n_idtra_grupolinea, n_idpl_linea, n_idtra_grupo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, ' + id_linea + ', ' + n_idtra_grupo + ', 0, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+                i++;
+                await pool.query(cadena)
+                
+            } catch (error) {
+                
+            }
+        });
+        if (arr_n_idpl_linea.length <= i) {
+            response.status(200).json({ estado: true, mensaje: "", data: null})
+        }
     } else {
         response.status(200).json(obj)
     }
