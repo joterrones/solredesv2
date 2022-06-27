@@ -7,10 +7,11 @@ let pool = cnx.pool;
 
 const get = (request, response) => {
   //pool = cnx.dynamic_connection(request.body.proyecto);
-  
+  let stringBuscar = '%'+ request.body.stringBuscar+'%';
   pool.query('select p.n_idpl_elemento,p.c_unidadmedida,p.c_codigo,p.c_nombre,p.b_partidanueva,p.c_material,p.c_esfuerzo,p.c_altura,p.c_seccionconductor from pl_elemento p ' +
             ' inner join pl_tipoelemento tp on tp.n_idpl_tipoelemento =  p.n_idpl_tipoelemento and tp.n_borrado = 0 '+
-            ' where p.n_borrado = 0 and tp.n_idpro_proyecto = $1 and (p.n_idpl_tipoelemento = $2 or 0 = $2) ORDER BY left(p.c_codigo,2) asc,Cast(REPLACE(REPLACE(REPLACE(p.c_codigo,\'LP_\',\'\'),\'RP_\',\'\'),\'RS_\',\'\') as Float) asc ',
+            ' where p.n_borrado = 0 and tp.n_idpro_proyecto = $1 and (p.n_idpl_tipoelemento = $2 or 0 = $2) and (p.c_nombre like \''+stringBuscar+'\' or p.c_codigo like \''+stringBuscar+'\') '+
+            ' ORDER BY left(p.c_codigo,2) asc,Cast(REPLACE(REPLACE(REPLACE(p.c_codigo,\'LP_\',\'\'),\'RP_\',\'\'),\'RS_\',\'\') as Float) asc ',
             [request.body.n_idpro_proyecto, request.body.n_idpl_tipoelemento],
             (error, results) => {
     if (error) {
@@ -89,7 +90,7 @@ const updateconfig = (request, response) => {
   if (request.body.c_seccionconductor == null) {
     request.body.c_seccionconductor = "";
   }
-  console.log(request.body.c_material);
+  
   pool.query('update pl_elemento set c_material=$2, c_esfuerzo=$3, c_altura=$4, c_seccionconductor=$5, b_partidanueva=$6, n_id_usermodi=$7, d_fechamodi= now() where n_idpl_elemento =$1 RETURNING *',
     [request.body.n_idpl_elemento, request.body.c_material, request.body.c_esfuerzo, request.body.c_altura, request.body.c_seccionconductor, request.body.b_partidanueva,request.body.n_id_usermodi], (error, results) => {
       if (error) {
