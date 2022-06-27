@@ -222,7 +222,8 @@ const estadoLinea = (request, response) => {
 const gettipolinea = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select n_idpl_tipolinea, c_nombre from pl_tipolinea where n_borrado = 0 and (n_idpl_tipolinea= $1 or 0 = $1) ', [request.body.n_idpl_tipolinea],
+        pool.query('Select n_idpl_tipolinea, c_nombre from pl_tipolinea where n_borrado = 0 and (n_idpl_tipolinea= $1 or 0 = $1) ', 
+        [request.body.n_idpl_tipolinea],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -286,6 +287,7 @@ const deleteTipoLinea = (request, response) => {
 const getZona = (request, response) => {
 
     var obj = valida.validaToken(request)
+    
     if (obj.estado) {
         pool.query('Select z.n_idpl_zona, z.n_idpro_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z \n\r' +
             'left join pro_proyecto pr on pr.n_idpro_proyecto = z.n_idpro_proyecto \n\r' +
@@ -309,8 +311,8 @@ const getZonas = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         pool.query('Select n_idpl_zona, c_codigo, c_nombre, n_idpro_proyecto from pl_zona \n\r' +
-            'where n_borrado = 0 and (n_idpl_zona = $1 or 0 = $1) and (n_idpro_proyecto = $2 or 0 = $2)'
-            , [request.body.n_idpl_tipolinea, request.body.n_idpro_proyecto],
+            'where n_borrado = 0  and (n_idpro_proyecto = $1 or 0 = $1)'
+            , [request.body.n_idpro_proyecto],
             (error, results) => {
 
                 if (error) {
@@ -852,6 +854,7 @@ const saveProUser = (request, response) => {
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
     let i = 0;
+    console.log(n_idseg_userprofileArray);
     if (obj.estado) {
 
         n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {

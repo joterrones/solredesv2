@@ -426,6 +426,8 @@ app.post('/api/mapa/gettipolinea', dbMapa.gettipolinea);
 app.post('/api/mapa/getLinea', dbMapa.getLinea);
 app.post('/api/mapa/getLineaFiltro',dbMapa.getLineaFiltro)
 app.post('/api/mapa/getestructura2', dbMapa.getestructura2);
+app.post('/api/mapa/getMonInspeccion', dbMapa.getMonInspeccion); 
+app.post('/api/mapa/getLineasMon', dbMapa.getLineasMon);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)
