@@ -833,7 +833,7 @@ const resetProUser = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         let cadena = 'update tra_grupousuario set b_activo = false \n\r' +
-            'where n_idtra_grupo = $1'
+            'where n_idtra_grupo = $1 and n_borrado = 0'
         pool.query(cadena, [request.body.n_idtra_grupo],
             (error, results) => {
                 if (error) {
@@ -866,6 +866,43 @@ const saveProUser = (request, response) => {
                 '       else \n\r' +
                 '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
                 '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+                i++
+                await pool.query(cadena)
+            } catch (error) {
+                
+            }
+        });
+        if (n_idseg_userprofileArray.length <= i) {
+            response.status(200).json({ estado: true, mensaje: "", data: null })
+        }
+    } else {
+        response.status(200).json(obj)
+    }
+
+}
+
+const denegarAllProuser = (request, response) => {
+
+    var obj = valida.validaToken(request)
+    let n_idseg_userprofileArray = request.body.n_idseg_userprofileArray;
+    let n_idtra_grupo = request.body.n_idtra_grupo;
+    let n_id_usermodi = request.body.n_id_usermodi;
+    let i = 0;
+    console.log(n_idseg_userprofileArray);
+    if (obj.estado) {
+
+        n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {
+            try {
+                let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
+                '           update tra_grupousuario set b_activo = false, n_is_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', false, 0, '+n_id_usermodi+', now()); \n\r' +
                 '       end if; \n\r' +
                 '   end \n\r' +
                 '$$';
@@ -1307,6 +1344,7 @@ module.exports = {
     getProUser,
     resetProUser,
     saveProUser,
+    denegarAllProuser,
     getLineaUser,
     noAsignarLineaUser,
     asignarLineaUser,
