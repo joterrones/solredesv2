@@ -1,3 +1,4 @@
+const { response } = require('express');
 const cnx = require('../common/appsettings')
 const valida = require('../common/validatoken')
 let pool = cnx.pool;
@@ -343,7 +344,7 @@ const getestructura2 = (request, response) => {
   }
 }
 
-const getMonInspeccion = (request, response) => {
+const getMonInspeccion =  (request, response) => {
   var obj = valida.validaToken(request)
   if (obj.estado) {    
     let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fechacrea, \'DD/MM/YYYY HH12:MI:SS\') as d_fechacrea, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
@@ -390,6 +391,30 @@ const getLineasMon = (request, response) => {
       response.status(200).json(obj)
   }
 }
+
+const getinspeccionxls= async (request, response) => {
+  var session = valida.validaToken(request)
+  if(session.estado){
+    console.log("getinspeccionxls", request.body)
+    let query = await pool.query('select * from vw_inspeccionxls '+
+    'where (0 = $1 or n_idpl_tipolinea = $1) '+
+    'and (0 = $2 or n_idpl_zona =$2) ' +  
+    'and (0 = $3 or n_idpl_linea=$3) ' +
+    'and n_idpro_proyecto=$4 ',[
+      request.body.n_idpl_tipolinea,
+      request.body.n_idpl_zona,
+      request.body.n_idpl_linea,
+      request.body.n_idpro_proyecto,
+    ])
+    console.log("getinspeccionxls", query.rows)
+    response.status(200).json({ estado: true, mensaje: "", data: query.rows })
+
+  }else{
+    response.status(200).json(session)
+  }
+}
+
+
 module.exports = {
     get,
     getlineas,
@@ -405,5 +430,6 @@ module.exports = {
     getLineaFiltro,
     getestructura2,
     getMonInspeccion,
-    getLineasMon
+    getLineasMon,
+    getinspeccionxls
 }

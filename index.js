@@ -124,11 +124,11 @@ app.post('/api/configuracionGeneral/saveCateTipoMontaje',bdConfiguracionGeneral.
 app.post('/api/configuracionGeneral/deleteCateTipoMontaje',bdConfiguracionGeneral.deleteCateTipoMontaje)
 app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
   let archivo = req.query.archivo;
-  console.log(archivo)
+
   let rutaCorta = archivo + "/Img/";
   let dir = __dirname.replace('\dal', '')+ruta+"/"+rutaCorta;
   let c_nombre = req.query.extension;
-  console.log(dir)
+
 
   if (!fs.existsSync( __dirname.replace('\dal', '')+ruta+"/"+archivo)) {    
     fs.mkdirSync(__dirname.replace('\dal', '')+ruta+"/"+archivo, 0744);
@@ -147,15 +147,14 @@ app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
       res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
     } else {  
       checksum.file(dir, function (err, sum) {        
-        console.log("Ruta check: ",dir);
-        console.log(sum);
+       
         nuevoNombreArchivo = __dirname.replace('\dal', '')+ruta+"/"+rutaCorta+sum+path.extname(c_nombre);
         fs.rename(dir, nuevoNombreArchivo, function(err) {
           if ( err ) console.log('ERROR: ' + err);
         });
         newRuta = rutaCorta+sum+path.extname(c_nombre);
         res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: newRuta, c_nombre: c_nombre, c_checksum: sum+path.extname(c_nombre) });
-        console.log("ERror",err)
+       
       })
     }
   });
@@ -201,10 +200,7 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
   req.query.c_ruta = dir;
   req.query.c_nombre = c_nombre;
   dir = dir + '' + c_nombre;
-  //rutaCorta = rutaCorta + '' + c_nombre;
 
-  console.log("Ruta",dir);
-  console.log("nombre",c_nombre);
   upload(req, res, function (err) {
     if (err) {
       res.status(200).json({ estado: false, mensaje: "No se pudo cargar el archivo: " + err.stack, data: null })
@@ -221,7 +217,7 @@ app.post('/api/almacen/uploadimagen', function (req, res) {
         res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: newRuta, c_nombre: c_nombre, c_checksum: sum+path.extname(c_nombre) });
         console.log("ERror",err)
       })
-      //res.status(200).json({ estado: true, mensaje: "Archivo cargado", c_ruta: rutaCorta, c_nombreImg: c_nombre  })
+
     }
   });
 }) 
@@ -429,6 +425,7 @@ app.post('/api/mapa/getLineaFiltro',dbMapa.getLineaFiltro)
 app.post('/api/mapa/getestructura2', dbMapa.getestructura2);
 app.post('/api/mapa/getMonInspeccion', dbMapa.getMonInspeccion); 
 app.post('/api/mapa/getLineasMon', dbMapa.getLineasMon);
+app.post('/api/mapa/getinspeccionxls', dbMapa.getinspeccionxls);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)
