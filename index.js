@@ -111,7 +111,8 @@ app.post('/api/configuracionGeneral/savetraGrupos',bdConfiguracionGeneral.savetr
 app.post('/api/configuracionGeneral/deletetraGrupos',bdConfiguracionGeneral.deletetraGrupos) 
 app.post('/api/configuracionGeneral/getProUser',bdConfiguracionGeneral.getProUser) 
 app.post('/api/configuracionGeneral/resetProUser',bdConfiguracionGeneral.resetProUser) 
-app.post('/api/configuracionGeneral/saveProUser',bdConfiguracionGeneral.saveProUser)
+app.post('/api/configuracionGeneral/saveProUser',bdConfiguracionGeneral.saveProUser) 
+app.post('/api/configuracionGeneral/denegarAllProuser',bdConfiguracionGeneral.denegarAllProuser)
 app.post('/api/configuracionGeneral/getLineaUser',bdConfiguracionGeneral.getLineaUser)
 app.post('/api/configuracionGeneral/noAsignarLineaUser',bdConfiguracionGeneral.noAsignarLineaUser)
 app.post('/api/configuracionGeneral/asignarLineaUser',bdConfiguracionGeneral.asignarLineaUser) 
@@ -426,6 +427,8 @@ app.post('/api/mapa/gettipolinea', dbMapa.gettipolinea);
 app.post('/api/mapa/getLinea', dbMapa.getLinea);
 app.post('/api/mapa/getLineaFiltro',dbMapa.getLineaFiltro)
 app.post('/api/mapa/getestructura2', dbMapa.getestructura2);
+app.post('/api/mapa/getMonInspeccion', dbMapa.getMonInspeccion); 
+app.post('/api/mapa/getLineasMon', dbMapa.getLineasMon);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)

@@ -222,7 +222,8 @@ const estadoLinea = (request, response) => {
 const gettipolinea = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
-        pool.query('Select n_idpl_tipolinea, c_nombre from pl_tipolinea where n_borrado = 0 and (n_idpl_tipolinea= $1 or 0 = $1) ', [request.body.n_idpl_tipolinea],
+        pool.query('Select n_idpl_tipolinea, c_nombre from pl_tipolinea where n_borrado = 0 and (n_idpl_tipolinea= $1 or 0 = $1) ', 
+        [request.body.n_idpl_tipolinea],
             (error, results) => {
                 if (error) {
                     response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
@@ -286,6 +287,7 @@ const deleteTipoLinea = (request, response) => {
 const getZona = (request, response) => {
 
     var obj = valida.validaToken(request)
+    
     if (obj.estado) {
         pool.query('Select z.n_idpl_zona, z.n_idpro_proyecto, z.c_codigo, z.c_nombre, pr.c_nombre as c_nombrep from pl_zona z \n\r' +
             'left join pro_proyecto pr on pr.n_idpro_proyecto = z.n_idpro_proyecto \n\r' +
@@ -309,8 +311,8 @@ const getZonas = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         pool.query('Select n_idpl_zona, c_codigo, c_nombre, n_idpro_proyecto from pl_zona \n\r' +
-            'where n_borrado = 0 and (n_idpl_zona = $1 or 0 = $1) and (n_idpro_proyecto = $2 or 0 = $2)'
-            , [request.body.n_idpl_tipolinea, request.body.n_idpro_proyecto],
+            'where n_borrado = 0  and (n_idpro_proyecto = $1 or 0 = $1)'
+            , [request.body.n_idpro_proyecto],
             (error, results) => {
 
                 if (error) {
@@ -831,7 +833,7 @@ const resetProUser = (request, response) => {
     var obj = valida.validaToken(request)
     if (obj.estado) {
         let cadena = 'update tra_grupousuario set b_activo = false \n\r' +
-            'where n_idtra_grupo = $1'
+            'where n_idtra_grupo = $1 and n_borrado = 0'
         pool.query(cadena, [request.body.n_idtra_grupo],
             (error, results) => {
                 if (error) {
@@ -852,6 +854,7 @@ const saveProUser = (request, response) => {
     let n_idtra_grupo = request.body.n_idtra_grupo;
     let n_id_usermodi = request.body.n_id_usermodi;
     let i = 0;
+    console.log(n_idseg_userprofileArray);
     if (obj.estado) {
 
         n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {
@@ -863,6 +866,43 @@ const saveProUser = (request, response) => {
                 '       else \n\r' +
                 '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
                 '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', true, 0, '+n_id_usermodi+', now()); \n\r' +
+                '       end if; \n\r' +
+                '   end \n\r' +
+                '$$';
+                i++
+                await pool.query(cadena)
+            } catch (error) {
+                
+            }
+        });
+        if (n_idseg_userprofileArray.length <= i) {
+            response.status(200).json({ estado: true, mensaje: "", data: null })
+        }
+    } else {
+        response.status(200).json(obj)
+    }
+
+}
+
+const denegarAllProuser = (request, response) => {
+
+    var obj = valida.validaToken(request)
+    let n_idseg_userprofileArray = request.body.n_idseg_userprofileArray;
+    let n_idtra_grupo = request.body.n_idtra_grupo;
+    let n_id_usermodi = request.body.n_id_usermodi;
+    let i = 0;
+    console.log(n_idseg_userprofileArray);
+    if (obj.estado) {
+
+        n_idseg_userprofileArray.forEach(async n_idseg_userprofile => {
+            try {
+                let cadena = 'do $$ \n\r' +
+                '   begin \n\r' +
+                '       if(exists(select n_idtra_grupo, n_idseg_userprofile from tra_grupousuario where n_idtra_grupo = ' + n_idtra_grupo + ' and n_idseg_userprofile = ' + n_idseg_userprofile + ')) then \n\r' +
+                '           update tra_grupousuario set b_activo = false, n_is_usermodi = '+n_id_usermodi+'	where n_idseg_userprofile = ' + n_idseg_userprofile + ' and n_idtra_grupo = ' + n_idtra_grupo + '; \n\r' +
+                '       else \n\r' +
+                '           INSERT INTO tra_grupousuario(n_idtra_grupousuario, n_idtra_grupo, n_idseg_userprofile, b_activo, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                '           VALUES (default, ' + n_idtra_grupo + ', ' + n_idseg_userprofile + ', false, 0, '+n_id_usermodi+', now()); \n\r' +
                 '       end if; \n\r' +
                 '   end \n\r' +
                 '$$';
@@ -1304,6 +1344,7 @@ module.exports = {
     getProUser,
     resetProUser,
     saveProUser,
+    denegarAllProuser,
     getLineaUser,
     noAsignarLineaUser,
     asignarLineaUser,
