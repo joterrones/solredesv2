@@ -426,6 +426,7 @@ app.post('/api/mapa/getestructura2', dbMapa.getestructura2);
 app.post('/api/mapa/getMonInspeccion', dbMapa.getMonInspeccion); 
 app.post('/api/mapa/getLineasMon', dbMapa.getLineasMon);
 app.post('/api/mapa/getinspeccionxls', dbMapa.getinspeccionxls);
+app.post('/api/mapa/getUsers', dbMapa.getUsers);
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)

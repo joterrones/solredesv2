@@ -406,11 +406,32 @@ const getinspeccionxls= async (request, response) => {
       request.body.n_idpl_linea,
       request.body.n_idpro_proyecto,
     ])
-    console.log("getinspeccionxls", query.rows)
     response.status(200).json({ estado: true, mensaje: "", data: query.rows })
 
   }else{
     response.status(200).json(session)
+  }
+}
+
+const getUsers = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {  
+    let cadena = 'select pl.n_idpl_linea, pl.c_codigo, pl.c_nombre, count(pl.c_codigo) from mon_inspeccion m \n\r' +
+        'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
+        'group by pl.n_idpl_linea, pl.c_nombre \n\r' +
+        'order by pl.c_codigo ' ;
+      pool.query(cadena,          
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
   }
 }
 
@@ -431,5 +452,6 @@ module.exports = {
     getestructura2,
     getMonInspeccion,
     getLineasMon,
-    getinspeccionxls
+    getinspeccionxls,
+    getUsers
 }
