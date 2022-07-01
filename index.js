@@ -427,6 +427,9 @@ app.post('/api/mapa/getMonInspeccion', dbMapa.getMonInspeccion);
 app.post('/api/mapa/getLineasMon', dbMapa.getLineasMon);
 app.post('/api/mapa/getinspeccionxls', dbMapa.getinspeccionxls);
 app.post('/api/mapa/getUsers', dbMapa.getUsers);
+app.post('/api/mapa/getTipoLineaMon', dbMapa.getTipoLineaMon); 
+app.post('/api/mapa/getZonaMon', dbMapa.getZonaMon); 
+
 
 /* Movil */
 app.get('/api/movil/getusuario', dbMovil.getusuario)

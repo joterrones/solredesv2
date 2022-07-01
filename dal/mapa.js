@@ -346,16 +346,23 @@ const getestructura2 = (request, response) => {
 
 const getMonInspeccion =  (request, response) => {
   var obj = valida.validaToken(request)
+
   if (obj.estado) {    
+    filtroFecha = '';
+    if (request.body.fecha_inicio != '' && request.body.fecha_final != '') {
+      let inicio = request.body.fecha_inicio
+      let final = request.body.fecha_final
+      filtroFecha = 'and m.d_fecha between \''+inicio+'\' and \''+final+'\' ';
+    }
     let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fechacrea, \'DD/MM/YYYY HH12:MI:SS\') as d_fechacrea, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
 		  'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
 		  'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
 		  'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
       'inner join seg_userprofile su on su.n_idseg_userprofile = m.n_id_usercrea and su.n_borrado = 0 \n\r' +
-	  'where m.n_borrado = 0 and (pl.n_idpl_linea = $1 or 0 = $1) and (pt.n_idpl_tipolinea = $2 or 0 = $2) and (z.n_idpl_zona = $3 or 0 = $3) and z.n_idpro_proyecto = $4 \n\r' +
+	  'where m.n_borrado = 0 and (pl.n_idpl_linea = $1 or 0 = $1) and (pt.n_idpl_tipolinea = $2 or 0 = $2) and (z.n_idpl_zona = $3 or 0 = $3) and z.n_idpro_proyecto = $4 and (m.n_id_usercrea = $5 or 0 = $5) '+filtroFecha +' \n\r' +
     'order by m.n_idmon_inspeccion desc ';
 
-    pool.query(cadena,[request.body.n_idpl_linea, request.body.n_idpl_tipolinea, request.body.n_idpl_zona, request.body.n_idpro_proyecto],   
+    pool.query(cadena,[request.body.n_idpl_linea, request.body.n_idpl_tipolinea, request.body.n_idpl_zona, request.body.n_idpro_proyecto, request.body.n_idseg_userprofile],   
         (error, results) => {
             if (error) {
                 console.log(cadena);
@@ -370,14 +377,95 @@ const getMonInspeccion =  (request, response) => {
   }
 }
 
+
+
+const getTipoLineaMon = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {  
+    let cadena = 'select pt.n_idpl_tipolinea, pt.c_nombre, count(pt.c_nombre) from mon_inspeccion m \n\r' +
+    'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
+    'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
+    'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
+    'where z.n_idpro_proyecto = $1  \n\r' +
+    'group by pt.n_idpl_tipolinea, pt.c_nombre \n\r' +
+    'order by pt.c_nombre ' ;
+      pool.query(cadena,[request.body.n_idpro_proyecto],    
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const getZonaMon = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {  
+    let cadena = 'select z.n_idpl_zona, z.c_codigo, z.c_nombre, count(z.c_codigo) from mon_inspeccion m \n\r' +
+    'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
+    'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
+    'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
+    'where z.n_idpro_proyecto = $1 and (pt.n_idpl_tipolinea = $2 or 0 = $2) \n\r' +
+    'group by z.n_idpl_zona, z.c_nombre \n\r' +
+    'order by z.c_codigo ' ;
+      pool.query(cadena,[request.body.n_idpro_proyecto, request.body.n_idpl_tipolinea],            
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
 const getLineasMon = (request, response) => {
   var obj = valida.validaToken(request)
   if (obj.estado) {  
     let cadena = 'select pl.n_idpl_linea, pl.c_codigo, pl.c_nombre, count(pl.c_codigo) from mon_inspeccion m \n\r' +
-        'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
-        'group by pl.n_idpl_linea, pl.c_nombre \n\r' +
-        'order by pl.c_codigo ' ;
-      pool.query(cadena,          
+    'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
+    'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
+    'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
+    'where z.n_idpro_proyecto = $1 and (pt.n_idpl_tipolinea = $2 or 0 = $2) and (z.n_idpl_zona = $3 or 0 = $3) \n\r' +
+    'group by pl.n_idpl_linea, pl.c_nombre \n\r' +
+    'order by pl.c_codigo ' ;
+      pool.query(cadena, [request.body.n_idpro_proyecto, request.body.n_idpl_tipolinea, request.body.n_idpl_zona],               
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const getUsers = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {  
+    let cadena = ' select us.n_idseg_userprofile,  us.c_username, us.c_nombre1, us.c_nombre2, us.c_appaterno, us.c_apmaterno, count(us.c_username) from mon_inspeccion mi \n\r' +
+      'inner join pl_linea pl on pl.n_idpl_linea = mi.n_idpl_linea and pl.n_borrado = 0 \n\r' +
+      'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
+      'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
+      'inner join seg_userprofile us ON mi.n_id_usercrea = us.n_idseg_userprofile \n\r' +
+      'where z.n_idpro_proyecto = $1 and (pt.n_idpl_tipolinea = $2 or 0 =$2) and (z.n_idpl_zona = $3 or 0 = $3) and (pl.n_idpl_linea = $4 or 0 = $4) \n\r' +
+      'group by us.n_idseg_userprofile, us.c_username, us.c_nombre1, us.c_nombre2, us.c_appaterno, us.c_apmaterno \n\r' +
+      'order by us.c_username ' ; 
+      pool.query(cadena, [request.body.n_idpro_proyecto, request.body.n_idpl_tipolinea, request.body.n_idpl_zona, request.body.n_idpl_linea],              
           (error, results) => {
               if (error) {
                   console.log(cadena);
@@ -413,29 +501,6 @@ const getinspeccionxls= async (request, response) => {
   }
 }
 
-const getUsers = (request, response) => {
-  var obj = valida.validaToken(request)
-  if (obj.estado) {  
-    let cadena = 'select pl.n_idpl_linea, pl.c_codigo, pl.c_nombre, count(pl.c_codigo) from mon_inspeccion m \n\r' +
-        'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
-        'group by pl.n_idpl_linea, pl.c_nombre \n\r' +
-        'order by pl.c_codigo ' ;
-      pool.query(cadena,          
-          (error, results) => {
-              if (error) {
-                  console.log(cadena);
-                  console.log(error);
-                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
-              } else {
-                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
-              }
-          })
-  } else {
-      response.status(200).json(obj)
-  }
-}
-
-
 module.exports = {
     get,
     getlineas,
@@ -453,5 +518,7 @@ module.exports = {
     getMonInspeccion,
     getLineasMon,
     getinspeccionxls,
-    getUsers
+    getUsers,
+    getTipoLineaMon,
+    getZonaMon
 }
