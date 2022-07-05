@@ -121,7 +121,7 @@ app.post('/api/configuracionGeneral/saveTipoElemento',bdConfiguracionGeneral.sav
 app.post('/api/configuracionGeneral/deleteTipoElemento',bdConfiguracionGeneral.deleteTipoElemento)
 app.post('/api/configuracionGeneral/getTablaCateTipoMontaje',bdConfiguracionGeneral.getTablaCateTipoMontaje)
 app.post('/api/configuracionGeneral/saveCateTipoMontaje',bdConfiguracionGeneral.saveCateTipoMontaje)
-app.post('/api/configuracionGeneral/deleteCateTipoMontaje',bdConfiguracionGeneral.deleteCateTipoMontaje)
+app.post('/api/configuracionGeneral/deleteCateTipoMontaje',bdConfiguracionGeneral.deleteCateTipoMontaje) 
 app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
   let archivo = req.query.archivo;
 
@@ -164,7 +164,13 @@ app.post('/api/configuracionGeneral/saveProImgLogo',bdConfiguracionGeneral.saveP
 app.post('/api/configuracionGeneral/saveColorPro',bdConfiguracionGeneral.saveColorPro)
 app.post('/api/configuracionGeneral/getTipoMontaje',bdConfiguracionGeneral.getTipoMontaje)
 app.post('/api/configuracionGeneral/saveTipoMontaje',bdConfiguracionGeneral.saveTipoMontaje)
-app.post('/api/configuracionGeneral/deleteTipoMontaje',bdConfiguracionGeneral.deleteTipoMontaje)
+app.post('/api/configuracionGeneral/deleteTipoMontaje',bdConfiguracionGeneral.deleteTipoMontaje) 
+app.post('/api/configuracionGeneral/getVersion',bdConfiguracionGeneral.getVersion) 
+app.post('/api/configuracionGeneral/saveVersion',bdConfiguracionGeneral.saveVersion)
+app.post('/api/configuracionGeneral/deleteVersion',bdConfiguracionGeneral.deleteVersion)  
+app.post('/api/configuracionGeneral/getDetalleVersion',bdConfiguracionGeneral.getDetalleVersion) 
+app.post('/api/configuracionGeneral/saveDetalleVersion',bdConfiguracionGeneral.saveDetalleVersion) 
+app.post('/api/configuracionGeneral/deleteDetalleVersion',bdConfiguracionGeneral.deleteDetalleVersion)
 
 
 /*Almacen */

@@ -1307,6 +1307,142 @@ const deleteTipoMontaje = (request, response) => {
     }
 }
 
+const getVersion = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('select n_idv_cabecera, c_cabecera, c_fecha  from v_cabecera where n_borrado = 0',
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error al traer Versión!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveVersion = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idv_cabecera = request.body.n_idv_cabecera;
+        let c_cabecera = request.body.c_cabecera;
+        let c_fecha = request.body.c_fecha;
+        let n_id_usermodi = request.body.n_id_usermodi;
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idv_cabecera from v_cabecera where n_idv_cabecera =\'' + n_idv_cabecera + '\')) then \n\r' +
+            '           update v_cabecera set c_cabecera= \'' + c_cabecera + '\', c_fecha = \''+c_fecha+'\', n_id_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idv_cabecera = \'' + n_idv_cabecera + '\' ; \n\r' +
+            '       else \n\r' +
+            '           insert into v_cabecera(n_idv_cabecera, c_cabecera, c_fecha, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,\'' + c_cabecera + '\', \'' + c_fecha + '\',0, now(), ' + n_id_usermodi + '); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteVersion = (request, response) => {
+    var obj = valida.validaToken(request)
+    let n_idv_cabecera = request.body.n_idv_cabecera;
+    let n_id_usermodi = request.body.n_id_usermodi;
+    if (obj.estado) {
+        pool.query('update v_cabecera set n_borrado = 1, n_id_usermodi=' + n_id_usermodi + ', d_fechamodi = now() where n_idv_cabecera=' + n_idv_cabecera,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getDetalleVersion = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        pool.query('select dv.n_idv_detalle, dv.n_idv_cabecera, dv.c_detalle, dv.n_borrado from v_detalle dv '+
+                        'inner join v_cabecera ca on ca.n_idv_cabecera = dv.n_idv_cabecera and ca.n_borrado = 0 ' +
+                    'where dv.n_borrado = 0	and dv.n_idv_cabecera = $1',
+            [request.body.n_idv_cabecera],
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error al traer Versión!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const saveDetalleVersion = (request, response) => {
+    var obj = valida.validaToken(request)
+    if (obj.estado) {
+        let n_idv_detalle = request.body.n_idv_detalle;
+        let n_idv_cabecera = request.body.n_idv_cabecera;
+        let c_detalle = request.body.c_detalle;
+        let n_id_usermodi = request.body.n_id_usermodi;
+        let cadena = 'do $$ \n\r' +
+            '   begin \n\r' +
+            '       if(exists(select n_idv_detalle from v_detalle where n_idv_detalle =\'' + n_idv_detalle + '\')) then \n\r' +
+            '           update v_detalle set c_detalle= \'' + c_detalle + '\', n_id_usermodi=' + n_id_usermodi + ', d_fechamodi= now() where n_idv_detalle = \'' + n_idv_detalle + '\' ; \n\r' +
+            '       else \n\r' +
+            '           insert into v_detalle(n_idv_detalle, n_idv_cabecera, c_detalle, n_borrado, d_fechacrea, n_id_usercrea) \n\r' +
+            '           values (default,' + n_idv_cabecera +', \'' + c_detalle + '\',0, now(), ' + n_id_usermodi + '); \n\r' +
+            '       end if; \n\r' +
+            '   end \n\r' +
+            '$$';
+        pool.query(cadena,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const deleteDetalleVersion = (request, response) => {
+    var obj = valida.validaToken(request)
+    let n_idv_detalle = request.body.n_idv_detalle;
+    let n_id_usermodi = request.body.n_id_usermodi;
+    if (obj.estado) {
+        pool.query('update v_detalle set n_borrado = 1, n_id_usermodi=' + n_id_usermodi + ', d_fechamodi = now() where n_idv_detalle=' + n_idv_detalle,
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error2!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
 
 module.exports = {
     getempresa,
@@ -1359,5 +1495,11 @@ module.exports = {
     saveColorPro,
     getTipoMontaje,
     saveTipoMontaje,
-    deleteTipoMontaje
+    deleteTipoMontaje,
+    getVersion,
+    deleteVersion,
+    saveVersion,
+    getDetalleVersion,
+    deleteDetalleVersion,
+    saveDetalleVersion
 }
