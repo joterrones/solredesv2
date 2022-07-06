@@ -170,7 +170,8 @@ app.post('/api/configuracionGeneral/saveVersion',bdConfiguracionGeneral.saveVers
 app.post('/api/configuracionGeneral/deleteVersion',bdConfiguracionGeneral.deleteVersion)  
 app.post('/api/configuracionGeneral/getDetalleVersion',bdConfiguracionGeneral.getDetalleVersion) 
 app.post('/api/configuracionGeneral/saveDetalleVersion',bdConfiguracionGeneral.saveDetalleVersion) 
-app.post('/api/configuracionGeneral/deleteDetalleVersion',bdConfiguracionGeneral.deleteDetalleVersion)
+app.post('/api/configuracionGeneral/deleteDetalleVersion',bdConfiguracionGeneral.deleteDetalleVersion) 
+app.post('/api/configuracionGeneral/getVersiones',bdConfiguracionGeneral.getVersiones)
 
 
 /*Almacen */

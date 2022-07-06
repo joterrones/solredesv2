@@ -1444,6 +1444,21 @@ const deleteDetalleVersion = (request, response) => {
     }
 }
 
+const getVersiones = (request, response) => {
+
+        pool.query('select vc.n_idv_cabecera, vc.c_cabecera, vc.c_fecha, vd.n_idv_cabecera as n_idv_cabeceradt, vd.c_detalle  from v_cabecera vc '+
+            'inner join v_detalle vd on vd.n_idv_cabecera = vc.n_idv_cabecera and vd.n_borrado = 0 '+
+            'where vc.n_borrado = 0 order by vc.n_idv_cabecera desc ', 
+            (error, results) => {
+                if (error) {
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+                } else {
+                    response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                }
+            })
+}
+
 module.exports = {
     getempresa,
     saveEmpresa,
@@ -1501,5 +1516,6 @@ module.exports = {
     saveVersion,
     getDetalleVersion,
     deleteDetalleVersion,
-    saveDetalleVersion
+    saveDetalleVersion,
+    getVersiones
 }
