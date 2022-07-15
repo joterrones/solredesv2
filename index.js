@@ -80,7 +80,7 @@ app.post('/api/configuracionGeneral/getempresa',bdConfiguracionGeneral.getempres
 app.post('/api/configuracionGeneral/saveEmpresa',bdConfiguracionGeneral.saveEmpresa) 
 app.post('/api/configuracionGeneral/deleteEmpresa',bdConfiguracionGeneral.deleteEmpresa)
 app.post('/api/configuracionGeneral/saveLinea',bdConfiguracionGeneral.saveLinea)
-//app.post('/api/configuracionGeneral/getLinea',bdConfiguracionGeneral.getLinea)
+app.post('/api/configuracionGeneral/getLinea',bdConfiguracionGeneral.getLinea)
 
 app.post('/api/configuracionGeneral/deleteLinea',bdConfiguracionGeneral.deleteLinea) 
 app.post('/api/configuracionGeneral/estadoLinea',bdConfiguracionGeneral.estadoLinea)
