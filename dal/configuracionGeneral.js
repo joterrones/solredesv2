@@ -77,6 +77,7 @@ const deleteEmpresa = (request, response) => {
 }
 
 const getLinea = (request, response) => {
+    console.log("getLinea");
     var obj = valida.validaToken(request)
     if (obj.estado) {
 

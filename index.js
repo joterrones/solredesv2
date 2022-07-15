@@ -80,7 +80,7 @@ app.post('/api/configuracionGeneral/getempresa',bdConfiguracionGeneral.getempres
 app.post('/api/configuracionGeneral/saveEmpresa',bdConfiguracionGeneral.saveEmpresa) 
 app.post('/api/configuracionGeneral/deleteEmpresa',bdConfiguracionGeneral.deleteEmpresa)
 app.post('/api/configuracionGeneral/saveLinea',bdConfiguracionGeneral.saveLinea)
-app.post('/api/configuracionGeneral/getLinea',bdConfiguracionGeneral.getLinea)
+//app.post('/api/configuracionGeneral/getLinea',bdConfiguracionGeneral.getLinea)
 
 app.post('/api/configuracionGeneral/deleteLinea',bdConfiguracionGeneral.deleteLinea) 
 app.post('/api/configuracionGeneral/estadoLinea',bdConfiguracionGeneral.estadoLinea)
@@ -448,9 +448,9 @@ app.post('/api/movil/guardardatosalmacen', dbMovil.guardardatosalmacen)
 app.post('/api/movil/guardarfotoalmacen', dbMovil.guardarfotoalmacen)
 
 
-app.listen(port, () => {
+/*app.listen(port, () => {
   console.log(`App running on port ${port}.`)
-})
+})*/
 
 
 /*Elemento*/
@@ -467,3 +467,137 @@ app.post('/api/ficha/getFoto', dbFicha.getFoto)
 
 /*Exportar*/
 app.post('/api/exportar/exportar', dbExportar.exportar)
+
+const options = {
+  cors: {
+    origin: 'http://localhost:4200',
+  },
+};
+
+const server = require('http').Server(app);
+const io = require('socket.io')(server, options);
+
+const cnx = require('./common/appsettings');
+const valida = require('./common/validatoken');
+let pool = cnx.pool;
+io.on('connection', function (socket) {
+  const handshake = socket.id;
+  let  nameRoom  = socket.handshake.query;
+
+  console.log(handshake);
+  console.log(nameRoom);  
+
+  socket.join(nameRoom)
+  /*socket.on('evento', (res) => {
+    // Emite el mensaje a todos lo miembros de las sala menos a la persona que envia el mensaje   
+    socket.to(nameRoom).emit('evento', res);    
+  })*/
+
+  app.post('/api/movil/guardardatos2', async (request, response) => {
+    console.log("request.body", request.body);
+    let inspecciones = request.body.inspecciones;
+    console.log("inspecciones", inspecciones);
+    let resultados = [];
+    let cadena_inspeccion = '';
+    let resultado;
+    inspecciones.forEach(async element => {
+        try {
+            let queryExisteInspeccion = await pool.query('Select n_idmon_inspeccion from mon_inspeccion where c_codigo = $1 and n_borrado=0', [element.c_codigo]);
+            if (queryExisteInspeccion.rowCount == 0) {
+
+                if (!element.n_altitud) {
+                    element.n_altitud = 0;
+                }
+
+                if (!element.n_precision) {
+                    element.n_precision = 0;
+                }
+                
+                element.n_modulo= element.n_modulo===undefined?0:element.n_modulo;
+
+                cadena_inspeccion = 'insert into mon_inspeccion(n_idmon_inspeccion,c_codigo,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_idpl_linea,n_tipoapp,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                    '(default,\'' + element.c_codigo + '\',\'' + element.c_latitud + '\',\'' + element.c_longitud + '\',' + element.n_precision + ',' + element.n_altitud + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),'+element.n_idpl_linea+','+element.n_modulo+',0,' + element.n_id_usuario + ',now()) returning *';
+                console.log("cadena_inspeccion", cadena_inspeccion);
+                let insertInspeccion = await pool.query(cadena_inspeccion);
+                if (insertInspeccion.rowCount > 0) {
+
+                    if (element.vanos) {
+                        if (element.vanos.length > 0) {
+                            let cadena_vano = 'insert into mon_inspeccionvano(n_idmon_inspeccionvano,c_codigoinicio,c_codigofin,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                            element.vanos.forEach(vano => {
+                                cadena_vano = cadena_vano + '(default,\'' + vano.c_codigoinicio + '\',\'' + vano.c_codigofin + '\'' + ',0,' + element.n_id_usuario + ',now()),';
+                            });
+                            cadena_vano = cadena_vano.substr(0, cadena_vano.length - 1) + ' returning *';
+                            await pool.query(cadena_vano)
+                        }
+                    }
+
+                    if (element.detallesInspeccion) {
+                        if (element.detallesInspeccion.length > 0) {
+                            let cadena_detalle = '';
+                            await element.detallesInspeccion.forEach(async detalle => {
+                                cadena_detalle = 'insert into mon_inspecciondetalle(n_idmon_inspecciondetalle,n_idmon_inspeccion,n_idpl_armado,n_cantidad,b_adicional,b_eliminado,c_observacion,n_orientacion,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                                    '(default,' + insertInspeccion.rows[0].n_idmon_inspeccion + ',' + detalle.n_idpl_armado + ',' + detalle.n_cantidad + ',' + detalle.b_adicional + ',' + detalle.b_eliminado + ',\'' + detalle.c_observacion + '\',' + detalle.n_orientacion + ',0,' + element.n_id_usuario + ',now()) returning *';
+                                let insertDetalle = await pool.query(cadena_detalle);
+
+                                if (detalle.observacionesInspeccion) {
+                                    if (detalle.observacionesInspeccion.length > 0) {
+                                        let cadena_observacion = 'insert into mon_inspeccionobservacion(n_idmon_inspeccionobservacion,n_idmon_inspecciondetalle,n_idgen_observacion,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                                        detalle.observacionesInspeccion.forEach(observacion => {
+                                            cadena_observacion = cadena_observacion + '(default,' + insertDetalle.rows[0].n_idmon_inspecciondetalle + ',' + observacion.n_idgen_observacion + ',0,' + element.n_id_usuario + ',now()),';
+                                        });
+                                        cadena_observacion = cadena_observacion.substr(0, cadena_observacion.length - 1) + ' returning *';
+                                        let insertObservacion = await pool.query(cadena_observacion)
+                                    }
+                                }
+
+                                if (detalle.fotos) {
+                                    if (detalle.fotos.length > 0) {
+                                        let cadena_fotos = 'insert into mon_inspecciondetallefoto(n_idmon_inspecciondetallefoto,n_idmon_inspecciondetalle,c_nombre,n_idgen_tipofoto,b_estado,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                                        detalle.fotos.forEach(foto => {
+                                            cadena_fotos = cadena_fotos + '(default,' + insertDetalle.rows[0].n_idmon_inspecciondetalle + ',\'' + foto.c_nombre + '\',' + foto.n_tipofoto + ',false,0,' + element.n_id_usuario + ',now()),';
+                                        });
+                                        cadena_fotos = cadena_fotos.substr(0, cadena_fotos.length - 1) + ' returning *';
+                                        let insertFoto = await pool.query(cadena_fotos);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    resultado = {
+                        c_codigo: element.c_codigo,
+                        b_flag: true,
+                        c_mensaje: "Registro guardado"
+                    };
+                }
+            } else {
+                resultado = {
+                    c_codigo: element.c_codigo,
+                    b_flag: false,
+                    c_mensaje: "El registro ya existe"
+                };
+            }
+        } catch (error) {
+            resultado = {
+                c_codigo: element.c_codigo,
+                b_flag: false,
+                c_mensaje: "Ocurrio un error al insertar los datos de inspeccion!." + error.stack
+            };
+        }
+        resultados.push(resultado);
+        if (inspecciones.length <= resultados.length) {            
+            response.status(200).json({ inspecciones: resultados });
+            socket.to(nameRoom).emit('evento', resultados.length);    
+        }
+    });
+
+})
+  socket.on('disconnect', function () {
+    console.log('user disconnected');
+  });
+});
+
+server.listen(port, function () {
+  console.log('\n')
+  console.log(`App running on port ${port}.`)
+})
