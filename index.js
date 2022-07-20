@@ -121,7 +121,7 @@ app.post('/api/configuracionGeneral/saveTipoElemento',bdConfiguracionGeneral.sav
 app.post('/api/configuracionGeneral/deleteTipoElemento',bdConfiguracionGeneral.deleteTipoElemento)
 app.post('/api/configuracionGeneral/getTablaCateTipoMontaje',bdConfiguracionGeneral.getTablaCateTipoMontaje)
 app.post('/api/configuracionGeneral/saveCateTipoMontaje',bdConfiguracionGeneral.saveCateTipoMontaje)
-app.post('/api/configuracionGeneral/deleteCateTipoMontaje',bdConfiguracionGeneral.deleteCateTipoMontaje) 
+app.post('/api/configuracionGeneral/deleteCateTipoMontaje',bdConfiguracionGeneral.deleteCateTipoMontaje)  
 app.post('/api/configuracionGeneral/uploadfile', function (req, res) {
   let archivo = req.query.archivo;
 
@@ -171,7 +171,10 @@ app.post('/api/configuracionGeneral/deleteVersion',bdConfiguracionGeneral.delete
 app.post('/api/configuracionGeneral/getDetalleVersion',bdConfiguracionGeneral.getDetalleVersion) 
 app.post('/api/configuracionGeneral/saveDetalleVersion',bdConfiguracionGeneral.saveDetalleVersion) 
 app.post('/api/configuracionGeneral/deleteDetalleVersion',bdConfiguracionGeneral.deleteDetalleVersion) 
-app.post('/api/configuracionGeneral/getVersiones',bdConfiguracionGeneral.getVersiones)
+app.post('/api/configuracionGeneral/getVersiones',bdConfiguracionGeneral.getVersiones) 
+app.post('/api/configuracionGeneral/getNotificacion',bdConfiguracionGeneral.getNotificacion) 
+app.post('/api/configuracionGeneral/getNotificacionDetalle',bdConfiguracionGeneral.getNotificacionDetalle) 
+app.post('/api/configuracionGeneral/showNotificacion',bdConfiguracionGeneral.showNotificacion)
 
 
 /*Almacen */
@@ -480,6 +483,7 @@ const io = require('socket.io')(server, options);
 const cnx = require('./common/appsettings');
 const valida = require('./common/validatoken');
 let pool = cnx.pool;
+
 io.on('connection', function (socket) {
   const handshake = socket.id;
   let  nameRoom  = socket.handshake.query;
@@ -587,14 +591,49 @@ io.on('connection', function (socket) {
         resultados.push(resultado);
         if (inspecciones.length <= resultados.length) {            
             response.status(200).json({ inspecciones: resultados });
-            socket.to(nameRoom).emit('evento', resultados.length);    
+            await pool.query('select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and b_activo = true ',
+              (error, results) => {
+                if (error) {
+                    console.log(error);                            
+                } else {
+                  results.rows.forEach(async element => {  
+                    let n_idg_notificacion = 0;
+                    await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea) ' +
+                              ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+resultados.length+' inspecciones\', true, 0, '+ element.n_idseg_userprofile +', now()) returning n_idg_notificacion;',
+                        (error, results) => {
+                          if (error) {
+                            console.log(error);    
+                          }else{
+                            n_idg_notificacion = results.rows[0].n_idg_notificacion
+                            console.log("n_idg_notificacion---------------------------", n_idg_notificacion);
+                            resultados.forEach(async e => {
+                              if (e.b_flag) {
+                                 await pool.query('INSERT INTO g_notificacionmon( \n\r' +
+                                  ' n_idg_notificacionmon, n_idg_notificacion, c_codigo_mon, n_borrado, n_id_usercrea, d_fechacrea ) \n\r' +
+                                  ' VALUES (default, '+n_idg_notificacion+', \''+e.c_codigo+'\', 0, '+ element.n_idseg_userprofile +', now()); ',
+                                  (error, results) => {
+                                    if (error) {
+                                      console.log(error);    
+                                    }else{
+                                    }
+                                  });
+                              }
+                            }); 
+                          }
+                        });
+                  });
+                  console.log("resultado ------------------");
+                  socket.to(nameRoom).emit('evento', 5);
+                }
+              }); 
         }
     });
+  })
 
-})
   socket.on('disconnect', function () {
     console.log('user disconnected');
   });
+
 });
 
 server.listen(port, function () {

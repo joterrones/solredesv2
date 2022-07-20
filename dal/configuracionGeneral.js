@@ -1460,6 +1460,49 @@ const getVersiones = (request, response) => {
             })
 }
 
+const getNotificacion = (request, response) => {
+    pool.query('select n_idg_notificacion, n_idseg_userprofile , c_detalle, b_estado from g_notificacion \n\r' +
+    'where n_borrado = 0 and n_idseg_userprofile = $1 \n\r' +
+    'order by n_idg_notificacion desc limit 10',
+        [request.body.n_idseg_userprofile], 
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+            } else {
+                response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+            }
+        })
+}
+
+const getNotificacionDetalle = (request, response) => {
+    pool.query('select g.n_idg_notificacionmon, g.n_idg_notificacion, g.c_codigo_mon from g_notificacionmon as g \n\r' +
+	        'inner join g_notificacion n on g.n_idg_notificacion = n.n_idg_notificacion and n.n_borrado = 0 \n\r' +
+	        'where n.n_idseg_userprofile = $1',
+        [request.body.n_idseg_userprofile], 
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+            } else {
+                response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+            }
+        })
+}
+
+const showNotificacion = (request, response) => {
+    pool.query('update g_notificacion set b_estado = false  where n_idseg_userprofile = $1',
+        [request.body.n_idseg_userprofile], 
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+            } else {
+                response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+            }
+        })
+}
+
 module.exports = {
     getempresa,
     saveEmpresa,
@@ -1518,5 +1561,8 @@ module.exports = {
     getDetalleVersion,
     deleteDetalleVersion,
     saveDetalleVersion,
-    getVersiones
+    getVersiones,
+    getNotificacion,
+    getNotificacionDetalle,
+    showNotificacion
 }
