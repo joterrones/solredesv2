@@ -591,7 +591,7 @@ io.on('connection', function (socket) {
         resultados.push(resultado);
         if (inspecciones.length <= resultados.length) {            
             response.status(200).json({ inspecciones: resultados });
-            await pool.query('select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and b_activo = true ',
+            await pool.query('select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and b_activo = true and n_idseg_rol in (19,20,21,15,25) ',
               (error, results) => {
                 if (error) {
                     console.log(error);                            
@@ -599,7 +599,7 @@ io.on('connection', function (socket) {
                   results.rows.forEach(async element => {  
                     let n_idg_notificacion = 0;
                     await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea) ' +
-                              ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+resultados.length+' inspecciones\', true, 0, '+ element.n_idseg_userprofile +', now()) returning n_idg_notificacion;',
+                              ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+resultados.length+' inspeccion(es)\', true, 0, '+ element.n_idseg_userprofile +', now()) returning n_idg_notificacion;',
                         (error, results) => {
                           if (error) {
                             console.log(error);    

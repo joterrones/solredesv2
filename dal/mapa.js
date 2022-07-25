@@ -488,11 +488,14 @@ const getinspeccionxls= async (request, response) => {
     'where (0 = $1 or n_idpl_tipolinea = $1) '+
     'and (0 = $2 or n_idpl_zona =$2) ' +  
     'and (0 = $3 or n_idpl_linea=$3) ' +
-    'and n_idpro_proyecto=$4 ',[
+    'and n_idpro_proyecto=$4 ' +
+    'and (0 = $5 or n_idseg_userprofile=$5) '
+    ,[
       request.body.n_idpl_tipolinea,
       request.body.n_idpl_zona,
       request.body.n_idpl_linea,
       request.body.n_idpro_proyecto,
+      request.body.n_idseg_userprofile
     ])
     response.status(200).json({ estado: true, mensaje: "", data: query.rows })
 
