@@ -438,7 +438,11 @@ app.post('/api/mapa/getLineasMon', dbMapa.getLineasMon);
 app.post('/api/mapa/getinspeccionxls', dbMapa.getinspeccionxls);
 app.post('/api/mapa/getUsers', dbMapa.getUsers);
 app.post('/api/mapa/getTipoLineaMon', dbMapa.getTipoLineaMon); 
-app.post('/api/mapa/getZonaMon', dbMapa.getZonaMon); 
+app.post('/api/mapa/getZonaMon', dbMapa.getZonaMon);  
+app.post('/api/mapa/saveMon', dbMapa.saveMon); 
+app.post('/api/mapa/getObservaciones', dbMapa.getObservaciones); 
+app.post('/api/mapa/saveObservacion', dbMapa.saveObservacion); 
+app.post('/api/mapa/saveGenObservacion', dbMapa.saveGenObservacion);
 
 
 /* Movil */

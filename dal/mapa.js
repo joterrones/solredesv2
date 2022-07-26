@@ -354,7 +354,7 @@ const getMonInspeccion =  (request, response) => {
       let final = request.body.fecha_final
       filtroFecha = 'and m.d_fecha between \''+inicio+'\' and \''+final+'\' ';
     }
-    let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fechacrea, \'DD/MM/YYYY HH12:MI:SS\') as d_fechacrea, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
+    let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fechacrea, \'DD/MM/YYYY HH12:MI:SS\') as d_fechacrea, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.n_idpl_tipolinea, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.n_idpl_zona, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
 		  'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
 		  'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
 		  'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
@@ -504,6 +504,135 @@ const getinspeccionxls= async (request, response) => {
   }
 }
 
+const saveMon = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+
+    let n_idmon_inspeccion = request.body.n_idmon_inspeccion;
+    let c_codigo = request.body.c_codigo;
+    let n_idpl_linea = request.body.n_idpl_linea;
+    let n_idpl_tipolinea = request.body.n_idpl_tipolinea;
+    let n_idpl_zona = request.body.n_idpl_zona;
+    let c_latitud = request.body.c_latitud;
+    let c_longitud = request.body.c_longitud;
+    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+
+      let cadena = 'update mon_inspeccion set c_codigo= \'' + c_codigo + '\', c_latitud=\'' + c_latitud + '\', c_longitud=\'' + c_longitud + '\', n_idpl_linea=' + n_idpl_linea + ', n_id_usermodi=' + n_idseg_userprofile + ', d_fechamodi= now() where n_idmon_inspeccion =' + n_idmon_inspeccion + '';
+      pool.query(cadena,
+          (error, results) => {
+              if (error) {
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+              } else {
+                  let cadena = 'update pl_linea set n_idpl_tipolinea=' + n_idpl_tipolinea + ', n_idpl_zona=' + n_idpl_zona + ', n_id_usermodi=' + n_idseg_userprofile + ', d_fechamodi= now() where n_idpl_linea =' + n_idpl_linea + '';
+                  pool.query(cadena,
+                      (error, results) => {
+                          if (error) {
+                              console.log(error);
+                              response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+                          } else {                              
+                              response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+                          }
+                      })
+                }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const getObservaciones = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {  
+    let cadena = ' select mi.n_idmon_inspeccion , mid.n_idmon_inspecciondetalle ,pa.n_idpl_armado, pa.c_codigo as c_codigoarmado,mid.c_observacion, miv.n_idmon_inspeccionobservacion ,g.n_idgen_observacion  from mon_inspeccion mi \n\r' +
+                  'left join mon_inspecciondetalle mid on mid.n_idmon_inspeccion = mi.n_idmon_inspeccion \n\r' +
+                  'left join pl_armado pa on pa.n_idpl_armado = mid.n_idpl_armado \n\r' +
+                  'left join mon_inspeccionobservacion miv on miv.n_idmon_inspecciondetalle = mid.n_idmon_inspecciondetalle \n\r' +
+                  'left join gen_observacion g on g.n_idgen_observacion = miv.n_idgen_observacion \n\r' +
+                'where mi.n_idmon_inspeccion = $1 ' ; 
+      pool.query(cadena, [request.body.n_idmon_inspeccion],              
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {                
+                let observaciones =  results.rows;
+                pool.query('select * from gen_observacion where n_borrado = 0',             
+                  (error, results) => {
+                      if (error) {
+                          console.log(error);
+                          response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+                      } else {     
+                        let genObservaciones = results.rows
+                        response.status(200).json({ estado: true, mensaje: "", data: {observaciones: observaciones, genObservaciones: genObservaciones} })
+                      }
+                  })                    
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const saveObservacion = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+
+    let n_idmon_inspeccion = request.body.n_idmon_inspeccion;
+    let n_idmon_inspecciondetalle = request.body.n_idmon_inspecciondetalle;
+    let c_observacion = request.body.c_observacion;
+    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+
+    let cadena = 'update mon_inspecciondetalle set c_observacion= \'' + c_observacion + '\', d_fechamodi= now(), n_id_usermodi = '+n_idseg_userprofile+' where n_idmon_inspecciondetalle =' + n_idmon_inspecciondetalle + ' and n_idmon_inspeccion = '+n_idmon_inspeccion+' ';
+    pool.query(cadena,
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+            } else {
+              response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+            }
+        })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
+const saveGenObservacion = (request, response) => {
+  var obj = valida.validaToken(request)
+  if (obj.estado) {
+    
+    let n_idmon_inspecciondetalle = request.body.n_idmon_inspecciondetalle;
+    let n_idmon_inspeccionobservacion = request.body.n_idmon_inspeccionobservacion;
+    let n_idgen_observacion = request.body.n_idgen_observacion;
+    let n_idseg_userprofile = request.body.n_idseg_userprofile;
+
+      let cadena = 'do $$ \n\r' +
+          '   begin \n\r' +
+          '       if(exists(select n_idmon_inspeccionobservacion from mon_inspeccionobservacion where n_borrado = 0 and n_idmon_inspeccionobservacion =\'' + n_idmon_inspeccionobservacion + '\')) then \n\r' +
+          '           update mon_inspeccionobservacion set n_idgen_observacion=' + n_idgen_observacion + ', n_id_usermodi=' + n_idseg_userprofile + ', d_fechamodi= now() where n_idmon_inspeccionobservacion =\'' + n_idmon_inspeccionobservacion + '\'; \n\r' +
+          '       else \n\r' +
+          '         INSERT INTO mon_inspeccionobservacion(n_idmon_inspecciondetalle,n_idmon_inspecciondetalle, n_idgen_observacion, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+          '         VALUES(default,'+n_idmon_inspecciondetalle+', '+n_idgen_observacion+', 0, '+n_idseg_userprofile+', now()); \n\r' +
+          '       end if; \n\r' +
+          '   end \n\r' +
+          '$$';
+
+      pool.query(cadena,
+          (error, results) => {
+              if (error) {
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error3!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+  } else {
+      response.status(200).json(obj)
+  }
+}
+
 module.exports = {
     get,
     getlineas,
@@ -523,5 +652,9 @@ module.exports = {
     getinspeccionxls,
     getUsers,
     getTipoLineaMon,
-    getZonaMon
+    getZonaMon,
+    saveMon,
+    getObservaciones,
+    saveObservacion,
+    saveGenObservacion
 }
