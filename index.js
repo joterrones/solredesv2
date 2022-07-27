@@ -449,7 +449,7 @@ app.post('/api/mapa/saveGenObservacion', dbMapa.saveGenObservacion);
 app.get('/api/movil/getusuario', dbMovil.getusuario)
 app.get('/api/movil/getlinea', dbMovil.getlinea)
 app.get('/api/movil/getdato', dbMovil.getdato)
-app.post('/api/movil/guardardatos', dbMovil.guardardatos)
+//app.post('/api/movil/guardardatos', dbMovil.guardardatos)
 app.post('/api/movil/guardarfoto', dbMovil.guardarfoto)
 app.post('/api/movil/guardardatosalmacen', dbMovil.guardardatosalmacen)
 app.post('/api/movil/guardarfotoalmacen', dbMovil.guardarfotoalmacen)
@@ -501,7 +501,7 @@ io.on('connection', function (socket) {
     socket.to(nameRoom).emit('evento', res);    
   })*/
 
-  app.post('/api/movil/guardardatos2', async (request, response) => {
+  app.post('/api/movil/guardardatos', async (request, response) => {
     console.log("request.body", request.body);
     let inspecciones = request.body.inspecciones;
     console.log("inspecciones", inspecciones);
