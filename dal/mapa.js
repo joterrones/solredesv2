@@ -354,7 +354,7 @@ const getMonInspeccion =  (request, response) => {
       let final = request.body.fecha_final
       filtroFecha = 'and m.d_fecha between \''+inicio+'\' and \''+final+'\' ';
     }
-    let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fechacrea, \'DD/MM/YYYY HH24:MI:SS\') as d_fechacrea, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.n_idpl_tipolinea, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.n_idpl_zona, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
+    let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fecha, \'DD/MM/YYYY HH24:MI:SS\') as d_fechacrea, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.n_idpl_tipolinea, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.n_idpl_zona, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
 		  'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
 		  'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
 		  'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
