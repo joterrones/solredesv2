@@ -1462,9 +1462,9 @@ const getVersiones = (request, response) => {
 
 const getNotificacion = (request, response) => {
     pool.query('select n_idg_notificacion, n_idseg_userprofile , c_detalle, b_estado from g_notificacion \n\r' +
-    'where n_borrado = 0 and n_idseg_userprofile = $1 \n\r' +
+    'where n_borrado = 0 and n_idseg_userprofile = $1 and n_idpro_proyecto = $2 \n\r' +
     'order by n_idg_notificacion desc limit 10',
-        [request.body.n_idseg_userprofile], 
+        [request.body.n_idseg_userprofile, request.body.n_idpro_proyecto], 
         (error, results) => {
             if (error) {
                 console.log(error);
