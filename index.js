@@ -174,7 +174,9 @@ app.post('/api/configuracionGeneral/deleteDetalleVersion',bdConfiguracionGeneral
 app.post('/api/configuracionGeneral/getVersiones',bdConfiguracionGeneral.getVersiones) 
 app.post('/api/configuracionGeneral/getNotificacion',bdConfiguracionGeneral.getNotificacion) 
 app.post('/api/configuracionGeneral/getNotificacionDetalle',bdConfiguracionGeneral.getNotificacionDetalle) 
-app.post('/api/configuracionGeneral/showNotificacion',bdConfiguracionGeneral.showNotificacion)
+app.post('/api/configuracionGeneral/showNotificacion',bdConfiguracionGeneral.showNotificacion) 
+app.post('/api/configuracionGeneral/getMonInspeccionPopup',bdConfiguracionGeneral.getMonInspeccionPopup) 
+app.post('/api/configuracionGeneral/getinspeccionxlspopup',bdConfiguracionGeneral.getinspeccionxlspopup)
 
 
 /*Almacen */

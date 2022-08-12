@@ -1503,6 +1503,51 @@ const showNotificacion = (request, response) => {
         })
 }
 
+const getMonInspeccionPopup =  (request, response) => {
+    var obj = valida.validaToken(request)
+  
+    if (obj.estado) {          
+      let cadena = 'select m.n_idmon_inspeccion, m.c_codigo, m.c_latitud, m.c_longitud, m.n_precision, m.n_altitud, to_char(m.d_fecha, \'DD/MM/YYYY HH24:MI:SS\') as d_fecha, m.n_idpl_linea, m.n_tipoapp, pl.c_codigo as c_codigol, pl.c_nombre as c_nombrel, pt.n_idpl_tipolinea, pt.c_codigo as c_codigotl, pt.c_nombre as c_nombretl, z.n_idpl_zona, z.c_codigo as c_codigoz, su.c_username, su.c_nombre1, su.c_nombre2, su.c_appaterno, su.c_apmaterno  from mon_inspeccion m \n\r' +
+            'inner join pl_linea pl on pl.n_idpl_linea = m.n_idpl_linea and pl.n_borrado = 0 \n\r' +
+            'inner join pl_tipolinea pt on pt.n_idpl_tipolinea = pl.n_idpl_tipolinea and pt.n_borrado = 0 \n\r' +
+            'inner join pl_zona z ON pl.n_idpl_zona = z.n_idpl_zona AND z.n_borrado = 0 \n\r' +
+            'inner join g_notificacionmon gm on gm.c_codigo_mon = m.c_codigo  \n\r' +
+        'inner join seg_userprofile su on su.n_idseg_userprofile = m.n_id_usercrea and su.n_borrado = 0 \n\r' +
+        'where m.n_borrado = 0 and z.n_idpro_proyecto = $1 and (gm.n_idg_notificacion = $2) \n\r' +
+      'order by m.n_idmon_inspeccion desc ';
+  
+      pool.query(cadena,[request.body.n_idpro_proyecto, request.body.n_idg_notificacion],   
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+    } else {
+        response.status(200).json(obj)
+    }
+  }
+
+  const getinspeccionxlspopup= async (request, response) => {
+    console.log("asdasdWOW");
+    var session = valida.validaToken(request)
+    if(session.estado){
+      console.log("getinspeccionxls", request.body)
+      let query = await pool.query('select * from vw_inspeccionxls_popup '+
+      ' where (0 = $1 or n_idg_notificacion = $1) '
+      ,[
+        request.body.n_idg_notificacion
+      ])
+      response.status(200).json({ estado: true, mensaje: "", data: query.rows })
+  
+    }else{
+      response.status(200).json(session)
+    }
+  }
+
 module.exports = {
     getempresa,
     saveEmpresa,
@@ -1564,5 +1609,7 @@ module.exports = {
     getVersiones,
     getNotificacion,
     getNotificacionDetalle,
-    showNotificacion
+    showNotificacion,
+    getMonInspeccionPopup,
+    getinspeccionxlspopup
 }
