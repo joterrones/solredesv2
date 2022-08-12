@@ -1491,8 +1491,8 @@ const getNotificacionDetalle = (request, response) => {
 }
 
 const showNotificacion = (request, response) => {
-    pool.query('update g_notificacion set b_estado = false  where n_idseg_userprofile = $1',
-        [request.body.n_idseg_userprofile], 
+    pool.query('update g_notificacion set b_estado = true  where n_idg_notificacion = $1',
+        [request.body.n_idg_notificacion], 
         (error, results) => {
             if (error) {
                 console.log(error);

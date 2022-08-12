@@ -595,41 +595,62 @@ io.on('connection', function (socket) {
         resultados.push(resultado);
         if (inspecciones.length <= resultados.length) {            
             response.status(200).json({ inspecciones: resultados });
-            await pool.query('select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and b_activo = true and n_idseg_rol in (19,20,21,15,25) ',
-              (error, results) => {
-                if (error) {
-                    console.log(error);                            
-                } else {
-                  results.rows.forEach(async element => {  
-                    let n_idg_notificacion = 0;
-                    await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea) ' +
-                              ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+resultados.length+' inspeccion(es)\', true, 0, '+ element.n_idseg_userprofile +', now()) returning n_idg_notificacion;',
-                        (error, results) => {
-                          if (error) {
-                            console.log(error);    
-                          }else{
-                            n_idg_notificacion = results.rows[0].n_idg_notificacion
-                            console.log("n_idg_notificacion---------------------------", n_idg_notificacion);
-                            resultados.forEach(async e => {
-                              if (e.b_flag) {
-                                 await pool.query('INSERT INTO g_notificacionmon( \n\r' +
-                                  ' n_idg_notificacionmon, n_idg_notificacion, c_codigo_mon, n_borrado, n_id_usercrea, d_fechacrea ) \n\r' +
-                                  ' VALUES (default, '+n_idg_notificacion+', \''+e.c_codigo+'\', 0, '+ element.n_idseg_userprofile +', now()); ',
-                                  (error, results) => {
-                                    if (error) {
-                                      console.log(error);    
-                                    }else{
-                                    }
-                                  });
-                              }
-                            }); 
+            let n_idpl_linea = inspecciones[0].n_idpl_linea;
+            await pool.query('select p.n_idpro_proyecto from pro_proyecto p '+
+                                'inner join pl_zona pz on pz.n_idpro_proyecto = p.n_idpro_proyecto and pz.n_borrado = 0 ' +
+                                'inner join pl_linea pl on pl.n_idpl_zona = pz.n_idpl_zona and pl.n_borrado = 0 '+
+                              'where p.n_borrado = 0 and pl.n_idpl_linea = $1', [n_idpl_linea],
+            (error, results)=>{
+              if (error) {
+                console.log(error);  
+              }
+              else{
+                let n_idpro_proyecto = results.rows[0].n_idpro_proyecto
+                pool.query('select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and b_activo = true and n_idseg_rol in (19,20,21,15,25) ',
+                  (error, results) => {
+                    if (error) {
+                        console.log(error);                            
+                    } else {
+                      let n_insert = 0;
+                        resultados.forEach(async e => {
+                          if(e.b_flag){
+                            n_insert++;
                           }
-                        });
-                  });
-                  console.log("resultado ------------------");
-                  socket.to(nameRoom).emit('evento', 5);
-                }
-              }); 
+                        })    
+                        if (n_insert > 0) {
+                          results.rows.forEach(async element => {  
+                            let n_idg_notificacion = 0;                                   
+                              await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea, n_idpro_proyecto) ' +
+                                      ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+n_insert+' inspeccion(es)\', false, 0, '+ element.n_idseg_userprofile +', now(), '+n_idpro_proyecto+') returning n_idg_notificacion;',
+                                (error, results) => {
+                                  if (error) {
+                                    console.log(error);    
+                                  }else{
+                                    n_idg_notificacion = results.rows[0].n_idg_notificacion
+                                    resultados.forEach(async e => {
+                                      if (e.b_flag) {
+                                        await pool.query('INSERT INTO g_notificacionmon( \n\r' +
+                                          ' n_idg_notificacionmon, n_idg_notificacion, c_codigo_mon, n_borrado, n_id_usercrea, d_fechacrea ) \n\r' +
+                                          ' VALUES (default, '+n_idg_notificacion+', \''+e.c_codigo+'\', 0, '+ element.n_idseg_userprofile +', now()); ',
+                                          (error, results) => {
+                                            if (error) {
+                                              console.log(error);    
+                                            }else{
+                                            }
+                                          });
+                                      }
+                                    }); 
+                                  }
+                                });
+                          });
+                        }
+                      console.log("resultado ------------------");
+                      socket.to(nameRoom).emit('evento', 5);
+                    }
+                  }); 
+              }
+            })
+            
         }
     });
   })
