@@ -1461,7 +1461,7 @@ const getVersiones = (request, response) => {
 }
 
 const getNotificacion = (request, response) => {
-    pool.query('select n_idg_notificacion, n_idseg_userprofile , c_detalle, b_estado from g_notificacion \n\r' +
+    pool.query('select * from g_notificacion \n\r' +
     'where n_borrado = 0 and n_idseg_userprofile = $1 and n_idpro_proyecto = $2 \n\r' +
     'order by n_idg_notificacion desc limit 10',
         [request.body.n_idseg_userprofile, request.body.n_idpro_proyecto], 
@@ -1548,6 +1548,44 @@ const getMonInspeccionPopup =  (request, response) => {
     }
   }
 
+  
+const getAlmacenPopup =  (request, response) => {
+    var obj = valida.validaToken(request)
+  
+    if (obj.estado) {          
+        let cadena = 'select guia.n_idalm_guia, guia.n_idalm_almacen, pe.n_idgen_periodo, guia.c_nombre, guia.c_direccion, al.c_nombre as c_nombreal, pe.c_descripcion as periodo, split_part(pe.c_descripcion,\' \',1) as mes,pe.n_mes, split_part(pe.c_descripcion,\' \',2)::INT as annio,guia.c_ruc, guia.c_nroguia, guia.c_observacion from alm_guia guia \n\r' +
+        'inner join alm_almacen al on al.n_idalm_almacen = guia.n_idalm_almacen \n\r' +   
+        'inner join gen_periodo pe on pe.n_idgen_periodo = guia.n_idgen_periodo \n\r' +    
+        'inner join g_notificacion_alm g on g.n_idalm_guia = guia.n_idalm_guia and g.n_borrado = 0 \n\r' +  
+        'where guia.n_borrado = 0 and and g.n_idg_notificacion = $1 '+
+        'order by annio asc, (CASE WHEN split_part(c_descripcion,\' \',1) = \'Enero\' THEN 1 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Febrero\' THEN 2 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Marzo\' THEN 3 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Abril\' THEN 4 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Mayo\' THEN 5 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Junio\' THEN 6 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Julio\' THEN 7 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Agosto\' THEN 8 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Setiembre\' THEN 9 '+
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Octubre\' THEN 10 '+    
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Noviembre\' THEN 11 '+   
+                                'WHEN split_part(c_descripcion,\' \',1)=\'Diciembre\' THEN 12 '+  
+                                'ELSE 0 END)';
+      pool.query(cadena,[request.body.n_idg_notificacion],   
+          (error, results) => {
+              if (error) {
+                  console.log(cadena);
+                  console.log(error);
+                  response.status(200).json({ estado: false, mensaje: "DB: error!.", data: null })
+              } else {
+                  response.status(200).json({ estado: true, mensaje: "", data: results.rows })
+              }
+          })
+    } else {
+        response.status(200).json(obj)
+    }
+  }
+
 module.exports = {
     getempresa,
     saveEmpresa,
@@ -1611,5 +1649,6 @@ module.exports = {
     getNotificacionDetalle,
     showNotificacion,
     getMonInspeccionPopup,
-    getinspeccionxlspopup
+    getinspeccionxlspopup,
+    getAlmacenPopup
 }

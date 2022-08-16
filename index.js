@@ -176,7 +176,8 @@ app.post('/api/configuracionGeneral/getNotificacion',bdConfiguracionGeneral.getN
 app.post('/api/configuracionGeneral/getNotificacionDetalle',bdConfiguracionGeneral.getNotificacionDetalle) 
 app.post('/api/configuracionGeneral/showNotificacion',bdConfiguracionGeneral.showNotificacion) 
 app.post('/api/configuracionGeneral/getMonInspeccionPopup',bdConfiguracionGeneral.getMonInspeccionPopup) 
-app.post('/api/configuracionGeneral/getinspeccionxlspopup',bdConfiguracionGeneral.getinspeccionxlspopup)
+app.post('/api/configuracionGeneral/getinspeccionxlspopup',bdConfiguracionGeneral.getinspeccionxlspopup) 
+app.post('/api/configuracionGeneral/getAlmacenPopup',bdConfiguracionGeneral.getAlmacenPopup)
 
 
 /*Almacen */
@@ -622,8 +623,8 @@ io.on('connection', function (socket) {
                         if (n_insert > 0) {
                           results.rows.forEach(async element => {  
                             let n_idg_notificacion = 0;                                   
-                              await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea, n_idpro_proyecto) ' +
-                                      ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+n_insert+' inspeccion(es)\', false, 0, '+ element.n_idseg_userprofile +', now(), '+n_idpro_proyecto+') returning n_idg_notificacion;',
+                              await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea, n_idpro_proyecto, b_almacen) ' +
+                                      ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+n_insert+' inspeccion(es)\', false, 0, '+ element.n_idseg_userprofile +', now(), '+n_idpro_proyecto+', false) returning n_idg_notificacion;',
                                 (error, results) => {
                                   if (error) {
                                     console.log(error);    
@@ -656,6 +657,143 @@ io.on('connection', function (socket) {
         }
     });
   })
+
+  app.post('/api/movil/guardardatosalmacen2', async (request, response) => {
+    console.log("request.body", request.body);
+    let guias = request.body.guias;
+    console.log("guardardatosalmacen", guias);
+    let resultados = [];
+    let cadena_guia = '';
+    let resultado;
+    let insertguiaAux= [];
+    guias.forEach(async element => {
+        try {
+            /* let queryExisteGuia = await pool.query('Select n_idalm_guia from alm_guia where c_codigo = $1 and n_borrado=0', [element.c_codigo]);
+             if (queryExisteGuia.rowCount == 0) {*/
+
+            if (!element.n_altitud) {
+                element.n_altitud = 0;
+            }
+
+            if (!element.n_precision) {
+                element.n_precision = 0;
+            }
+
+            cadena_guia = 'insert into alm_guia(n_idalm_guia,n_idalm_almacen,c_nombre,c_direccion,n_idgen_periodo,c_nroguia,c_ruc,c_observacion,b_aprobar,c_latitud,c_longitud,n_precision,n_altitud,d_fecha,n_borrado,n_id_usercrea,d_fechacrea) values ' +
+                '(default,'
+                + element.n_idalm_almacen + ',\''
+                + element.c_nombre + '\',\''
+                + element.c_direccion + '\','
+                + element.n_idgen_periodo + ',\''
+                + element.c_nroguia + '\',\''
+                + element.c_ruc + '\',\''
+                + element.c_observacion
+                + '\',false,\''
+                + element.c_latitud + '\',\''
+                + element.c_longitud + '\','
+                + element.n_precision + ','
+                + element.n_altitud
+                + ',to_timestamp(\'' + element.d_fecha + '\',\'yyyy/mm/dd HH24:MI:SS\'),0,'
+                + element.n_id_usuario
+                + ',now()) returning *';
+
+            console.log("cadena_guia", cadena_guia);
+            let insertguia = await pool.query(cadena_guia);
+            if (insertguia.rowCount > 0) {
+                insertguiaAux.push(insertguia.rows[0]);
+                if (element.detalleguia != null && element.detallesguia.length > 0) {
+                    let cadena_detallesguia = 'insert into alm_detalleguia(n_idalm_detalleguia,n_idalm_guia, n_idpl_elemento, n_cantidad ,n_borrado,n_id_usercrea,d_fechacrea) values ';
+                    element.detallesguia.forEach(detalleguia => {
+                        cadena_detallesguia = cadena_detallesguia + '(default,'
+                            + insertguia.rows[0].n_idalm_guia + ','
+                            + detalleguia.n_idpl_elemento + ','
+                            + detalleguia.n_cantidad + ','
+                            + ',0,'
+                            + element.n_id_usuario
+                            + ',now()),';
+                    });
+                    cadena_detallesguia = cadena_detallesguia.substr(0, cadena_detallesguia.length - 1) + ' returning *';
+                    await pool.query(cadena_detallesguia)
+                }
+                resultado = {
+                    c_codigo: element.c_codigo,
+                    n_estado: 1,
+                    c_mensaje: "Registro guardado"
+                };
+            }
+            /*   } else {
+                   resultado = {
+                       c_codigo: element.c_codigo,
+                       n_estado: 0,
+                       c_mensaje: "El registro ya existe"
+                   };
+               }*/
+        } catch (error) {
+            resultado = {
+                c_codigo: element.c_codigo,
+                n_estado: 0,
+                c_mensaje: "Ocurrio un error al insertar los datos del almacen!." + error.stack
+            };
+        }
+        resultados.push(resultado);
+        if (guias.length <= resultados.length) {
+            response.status(200).json({ guias: resultados });
+            let n_idalm_almacen = guias[0].n_idalm_almacen;
+            await pool.query('select n_idpro_proyecto  from alm_almacen where n_idalm_almacen = $1', [n_idalm_almacen],
+            (error, results)=>{
+              if (error) {
+                console.log(error);  
+              }
+              else{
+                let n_idpro_proyecto = results.rows[0].n_idpro_proyecto
+                pool.query('select n_idseg_userprofile from seg_userprofile where n_borrado = 0 and b_activo = true and n_idseg_rol in (19,20,21,15,25) ',
+                  (error, results) => {
+                    if (error) {
+                        console.log(error);                            
+                    } else {
+                      let n_insert = 0;
+                        resultados.forEach(async e => {
+                          if(e.n_estado == 1){
+                            n_insert++;
+                          }
+                        })    
+                        if (n_insert > 0) {
+                          results.rows.forEach(async element => {  
+                            let n_idg_notificacion = 0;                                   
+                              await pool.query('INSERT INTO g_notificacion(n_idg_notificacion, n_idseg_userprofile, c_detalle, b_estado, n_borrado, n_id_usercrea,  d_fechacrea, n_idpro_proyecto, b_almacen) ' +
+                                      ' VALUES (default,'+ element.n_idseg_userprofile +', \'Se agregaron '+n_insert+' guía(s)\', false, 0, '+ element.n_idseg_userprofile +', now(), '+n_idpro_proyecto+', true) returning n_idg_notificacion;',
+                                (error, results) => {
+                                  if (error) {
+                                    console.log(error);    
+                                  }else{
+                                    n_idg_notificacion = results.rows[0].n_idg_notificacion
+                                    insertguiaAux.forEach(async e => {
+                                      if (e.n_idalm_guia) {
+                                        await pool.query('INSERT INTO g_notificacion_alm( \n\r' +
+                                          ' n_idg_notificacion_alm, n_idg_notificacion, n_idalm_guia, n_borrado, n_id_usercrea, d_fechacrea) \n\r' +
+                                          ' VALUES (default, '+n_idg_notificacion+', '+e.n_idalm_guia+', 0, '+ e.n_id_usercrea +', now()); ',
+                                          (error, results) => {
+                                            if (error) {
+                                              console.log(error);    
+                                            }else{
+                                            }
+                                          });
+                                      }
+                                    }); 
+                                  }
+                                });
+                          });
+                        }
+                      console.log("resultado almacen------------------");
+                      socket.to(nameRoom).emit('evento', 5);
+                    }
+                  }); 
+              }
+            })
+        }
+    });
+
+})
 
   socket.on('disconnect', function () {
     console.log('user disconnected');
