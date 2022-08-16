@@ -1008,11 +1008,78 @@ const getDashboardBolsa = (request, response) => {
     }
 }
 
+const getMonInspecion =  (request, response) => {
+    var obj = valida.validaToken(request)
+    let n_idpro_proyecto = request.body.n_idpro_proyecto
+    let fechaInicio = request.body.fechaInicio
+    let fechaFinal = request.body.fechaFinal
+
+    if (obj.estado) {          
+        let cadena = 'select pl.c_codigo, count(mi.n_idpl_linea)  from mon_inspeccion mi \n\r' +
+                        'inner join pl_linea pl on pl.n_idpl_linea = mi.n_idpl_linea \n\r' +
+                        'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona \n\r' +
+                    'where pz.n_idpro_proyecto = '+ n_idpro_proyecto +' and mi.n_borrado = 0 and  mi.d_fecha between \''+fechaInicio+'\' and \''+fechaFinal+'\' \n\r' +
+                    'group by pl.c_codigo  ';
+        pool.query(cadena,   
+            (error, results) => {
+                if (error) {
+                    console.log(cadena);
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+                } else {
+                    let claves = []
+                    let cantidades = []
+                    results.rows.forEach(element => {
+                        claves.push(element.c_codigo);
+                        cantidades.push(element.count)
+                    });
+                    response.status(200).json({ estado: true, mensaje: "", data: {claves: claves, cantidades: cantidades} })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
+const getDatosGuia =  (request, response) => {
+    var obj = valida.validaToken(request)
+    let n_idpro_proyecto = request.body.n_idpro_proyecto
+    let fechaInicio = request.body.fechaInicio
+    let fechaFinal = request.body.fechaFinal
+
+    if (obj.estado) {          
+        let cadena = 'select ag.c_nombre, count(ag.c_nombre)  from alm_guia ag \n\r' +
+                        'inner join alm_almacen aa on aa.n_idalm_almacen = ag.n_idalm_almacen and aa.n_borrado = 0 \n\r' +
+                    'where aa.n_idpro_proyecto = '+ n_idpro_proyecto +'  and ag.n_borrado = 0 and  ag.d_fechacrea between \''+fechaInicio+'\' and \''+fechaFinal+'\' \n\r' +
+                    'group by ag.c_nombre';
+        pool.query(cadena,   
+            (error, results) => {
+                if (error) {
+                    console.log(cadena);
+                    console.log(error);
+                    response.status(200).json({ estado: false, mensaje: "DB: error1!.", data: null })
+                } else {
+                    let claves = []
+                    let cantidades = []
+                    results.rows.forEach(element => {
+                        claves.push(element.c_nombre);
+                        cantidades.push(element.count)
+                    });
+                    response.status(200).json({ estado: true, mensaje: "", data: {claves: claves, cantidades: cantidades} })
+                }
+            })
+    } else {
+        response.status(200).json(obj)
+    }
+}
+
 module.exports = {
     getDepartamento,
     getcantidad,
     gettotales,
     getDashboardBolsa,
-    getLineas
+    getLineas,
+    getMonInspecion,
+    getDatosGuia
 }
 

@@ -469,7 +469,9 @@ app.post('/api/elemento/updateconfig', dbElemento.updateconfig)
 app.post('/api/elemento/getTipoElemento', dbElemento.getTipoElemento)
 
 /* Dashboard */
-app.post('/api/dashboard/getLineas', dbDashboard.getLineas)
+app.post('/api/dashboard/getLineas', dbDashboard.getLineas) 
+app.post('/api/dashboard/getMonInspecion', dbDashboard.getMonInspecion) 
+app.post('/api/dashboard/getDatosGuia', dbDashboard.getDatosGuia)
 
 /*Ficha */
 app.post('/api/ficha/get', dbFicha.get)

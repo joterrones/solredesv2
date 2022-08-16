@@ -1551,13 +1551,13 @@ const getMonInspeccionPopup =  (request, response) => {
   
 const getAlmacenPopup =  (request, response) => {
     var obj = valida.validaToken(request)
-  
+    console.log(request.body.n_idg_notificacion);
     if (obj.estado) {          
         let cadena = 'select guia.n_idalm_guia, guia.n_idalm_almacen, pe.n_idgen_periodo, guia.c_nombre, guia.c_direccion, al.c_nombre as c_nombreal, pe.c_descripcion as periodo, split_part(pe.c_descripcion,\' \',1) as mes,pe.n_mes, split_part(pe.c_descripcion,\' \',2)::INT as annio,guia.c_ruc, guia.c_nroguia, guia.c_observacion from alm_guia guia \n\r' +
         'inner join alm_almacen al on al.n_idalm_almacen = guia.n_idalm_almacen \n\r' +   
         'inner join gen_periodo pe on pe.n_idgen_periodo = guia.n_idgen_periodo \n\r' +    
         'inner join g_notificacion_alm g on g.n_idalm_guia = guia.n_idalm_guia and g.n_borrado = 0 \n\r' +  
-        'where guia.n_borrado = 0 and and g.n_idg_notificacion = $1 '+
+        'where guia.n_borrado = 0 and g.n_idg_notificacion = $1 '+
         'order by annio asc, (CASE WHEN split_part(c_descripcion,\' \',1) = \'Enero\' THEN 1 '+
                                 'WHEN split_part(c_descripcion,\' \',1)=\'Febrero\' THEN 2 '+
                                 'WHEN split_part(c_descripcion,\' \',1)=\'Marzo\' THEN 3 '+
