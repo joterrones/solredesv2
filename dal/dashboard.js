@@ -1015,11 +1015,11 @@ const getMonInspecion =  (request, response) => {
     let fechaFinal = request.body.fechaFinal
 
     if (obj.estado) {          
-        let cadena = 'select pl.c_codigo, count(mi.n_idpl_linea)  from mon_inspeccion mi \n\r' +
+        let cadena = 'select pz.c_codigo, count(pz.n_idpl_zona) from mon_inspeccion mi \n\r' +
                         'inner join pl_linea pl on pl.n_idpl_linea = mi.n_idpl_linea \n\r' +
                         'inner join pl_zona pz on pz.n_idpl_zona = pl.n_idpl_zona \n\r' +
                     'where pz.n_idpro_proyecto = '+ n_idpro_proyecto +' and mi.n_borrado = 0 and  mi.d_fecha between \''+fechaInicio+'\' and \''+fechaFinal+'\' \n\r' +
-                    'group by pl.c_codigo  ';
+                    'group by pz.c_codigo ';
         pool.query(cadena,   
             (error, results) => {
                 if (error) {
@@ -1048,10 +1048,10 @@ const getDatosGuia =  (request, response) => {
     let fechaFinal = request.body.fechaFinal
 
     if (obj.estado) {          
-        let cadena = 'select ag.c_nombre, count(ag.c_nombre)  from alm_guia ag \n\r' +
+        let cadena = 'select aa.c_nombre, count(aa.c_nombre)  from alm_guia ag \n\r' +
                         'inner join alm_almacen aa on aa.n_idalm_almacen = ag.n_idalm_almacen and aa.n_borrado = 0 \n\r' +
                     'where aa.n_idpro_proyecto = '+ n_idpro_proyecto +'  and ag.n_borrado = 0 and  ag.d_fechacrea between \''+fechaInicio+'\' and \''+fechaFinal+'\' \n\r' +
-                    'group by ag.c_nombre';
+                    'group by aa.c_nombre';
         pool.query(cadena,   
             (error, results) => {
                 if (error) {
