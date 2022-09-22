@@ -9,6 +9,7 @@ const dbSeguridad = require('./dal/seguridad')
 const dbImportacion = require('./dal/importacion')
 const dbProyecto = require('./dal/proyecto')
 const dbMapa = require('./dal/mapa')
+const bdReporte = require('./dal/reporte')
 const bdAlmacen = require('./dal/almacen')
 const bdArchivos = require('./dal/admarchivos')
 const bdConfiguracionGeneral = require('./dal/configuraciongeneral')
@@ -346,6 +347,18 @@ app.post('/api/armado/uploadfile', function (req, res) {
     }
   });
 })
+
+//REPORTE ******
+app.post('/api/reporte/getReporte',bdReporte.getReporte) 
+app.post('/api/reporte/getReporteCabecero',bdReporte.getReporteCabecero)
+app.post('/api/reporte/getZonasProyectos',bdReporte.getZonasProyectos)
+app.post('/api/reporte/saveReporteCabecero',bdReporte.saveReporteCabecero)
+app.post('/api/reporte/deleteReporteCabecero',bdReporte.deleteReporteCabecero)
+app.post('/api/reporte/saveReporte',bdReporte.saveReporte)
+app.post('/api/reporte/deleteReporte',bdReporte.deleteReporte)
+app.post('/api/reporte/getPeriodos',bdReporte.getPeriodos)
+
+
 
 /* Metrado */
 app.post('/api/metrado/get', dbMetrado.get)
@@ -807,3 +820,4 @@ server.listen(port, function () {
   console.log('\n')
   console.log(`App running on port ${port}.`)
 })
+
