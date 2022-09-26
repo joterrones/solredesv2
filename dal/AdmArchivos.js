@@ -13,7 +13,7 @@ const getArchivo = (request, response)=>{
     if (obj.estado) {
         
         /*let cadena = 'select n_iddoc_archivo, n_idpro_proyecto, c_nombre, c_ruta, c_rutalogica, c_checksum, c_tipo, n_iddoc_archivopadre from doc_archivo \n\r' +           
-            'where n_borrado = 0 and ( 0 = '+  n_iddoc_archivopadre +' or n_iddoc_archivopadre =' +n_iddoc_archivopadre+')';*/
+            'where n_borrado = 0 and ( 0 = '+  n_iddoc_archivopadre +' or n_iddoc_archivopadre =' +n_iddoc_archivopadre+')'; */
             let cadena = 'select n_iddoc_archivo, n_idpro_proyecto, c_nombre, c_ruta, c_rutalogica, c_checksum, c_tipo, n_iddoc_archivopadre from doc_archivo \n\r' +           
             'where n_borrado = 0 and  coalesce(n_iddoc_archivopadre,0) = ' + n_iddoc_archivopadre+' and n_idpro_proyecto = '+n_idpro_proyecto+'' ;
         pool.query(cadena,          
